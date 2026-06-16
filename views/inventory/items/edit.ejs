@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <script>(() => { try { const s = localStorage.getItem("themeMode"); if (s ? s === "dark" : matchMedia("(prefers-color-scheme: dark)").matches) document.documentElement.classList.add("dark"); } catch(_){} })();</script>
+  <meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Edit Barang - Facultyware</title>
+  <meta name="description" content="Form edit data barang inventaris logistik"/>
+  <link rel="stylesheet" href="/assets/styles.css"/>
+  <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+</head>
+<body>
+  <%- include('../sidebar', { activePage: 'items', user: user }) %>
+
+  <main id="content">
+    <header class="bg-background sticky inset-x-0 top-0 isolate flex shrink-0 items-center gap-2 border-b z-10">
+      <div class="flex h-14 w-full items-center gap-2 px-4">
+        <button type="button" onclick="document.dispatchEvent(new CustomEvent('basecoat:sidebar'))" class="btn-sm-icon-ghost mr-2 size-7 -ml-1.5" aria-label="Toggle sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg>
+        </button>
+        <span class="font-semibold text-sm flex-1">Edit Barang: <%= item.name %></span>
+        <a href="/inventory/items" class="btn-sm-outline" id="btn-kembali-edit">← Kembali</a>
+      </div>
+    </header>
+
+    <div class="p-6 max-w-2xl">
+      <% if (errors && errors.length > 0) { %>
+        <div class="rounded-md bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 px-4 py-3 mb-4 space-y-1">
+          <p class="text-sm font-medium text-red-800 dark:text-red-300">Mohon perbaiki kesalahan berikut:</p>
+          <ul class="list-disc list-inside text-sm text-red-700 dark:text-red-400">
+            <% errors.forEach(e => { %><li><%= e %></li><% }) %>
+          </ul>
+        </div>
+      <% } %>
+
+      <div class="card">
+        <header class="px-4 py-3 border-b">
+          <h2 class="font-semibold text-sm">Edit Data Barang</h2>
+          <p class="text-xs text-muted-foreground mt-0.5">ID Barang: #<%= item.id %></p>
+        </header>
+        <section>
+          <form method="POST" action="/inventory/items/<%= item.id %>/edit" class="space-y-4" id="form-edit-barang">
+            <div class="grid gap-1">
+              <label class="text-sm font-medium" for="edit-nama">Nama Barang <span class="text-red-500">*</span></label>
+              <input type="text" id="edit-nama" name="name" value="<%= item.name %>"
+                     placeholder="cth: Tinta Printer" class="input" required/>
+            </div>
+            <div class="grid gap-1">
+              <label class="text-sm font-medium" for="edit-kode">Kode Barang <span class="text-red-500">*</span></label>
+              <input type="text" id="edit-kode" name="code" value="<%= item.code %>"
+                     placeholder="cth: ITK-001" class="input" required/>
+              <p class="text-xs text-muted-foreground">Kode harus unik, tidak boleh sama dengan barang lain</p>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="grid gap-1">
+                <label class="text-sm font-medium" for="edit-satuan">Satuan <span class="text-red-500">*</span></label>
+                <input type="text" id="edit-satuan" name="unit" value="<%= item.unit %>"
+                       placeholder="cth: pcs, rim, lusin" class="input" required/>
+              </div>
+              <div class="grid gap-1">
+                <label class="text-sm font-medium" for="edit-minimal">Stok Minimal <span class="text-red-500">*</span></label>
+                <input type="number" id="edit-minimal" name="minimal_quantity" value="<%= item.minimal_quantity === -1 ? 0 : item.minimal_quantity %>"
+                       placeholder="cth: 5" min="0" class="input" required/>
+                <p class="text-xs text-muted-foreground">Peringatan diberikan jika stok di bawah nilai ini</p>
+              </div>
+            </div>
+            <div class="grid gap-1">
+              <label class="text-sm font-medium" for="edit-deskripsi">Deskripsi</label>
+              <textarea id="edit-deskripsi" name="description" rows="3"
+                        placeholder="Keterangan tambahan barang (opsional)" class="input"><%= item.description || '' %></textarea>
+            </div>
+            <div class="flex gap-2 pt-2">
+              <button type="submit" class="btn-sm" id="btn-update-barang">Perbarui Barang</button>
+              <a href="/inventory/items" class="btn-sm-outline" id="btn-batal-edit">Batal</a>
+            </div>
+          </form>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <script src="/assets/js/sidebar.js"></script>
+</body>
+</html>
