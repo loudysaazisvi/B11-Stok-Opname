@@ -33,203 +33,184 @@
         });
       })();
     </script>
-
-    <script>
-      (function () {
-        try {
-          const storedTheme = localStorage.getItem("themeVariant");
-          if (storedTheme)
-            document.documentElement.classList.add(`theme-${storedTheme}`);
-        } catch (event) {
-          console.error(
-            "Could not apply theme variant from localStorage",
-            event,
-          );
-        }
-      })();
-    </script>
-
     <meta charset="utf-8" />
-    <meta http-equiv="Content-Language" content="en" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-    <title>Basecoat</title>
-    <meta
-      name="description"
-      content="A components library built with Tailwind CSS that works with any web stack."
-    />
-    <meta name="title" content="Basecoat" />
-    <meta
-      name="keywords"
-      content="components,component library,component system,UI,UI kit,shadcn,shadcn/ui,Tailwind CSS,Tailwind,CSS,HTML,Jinja,Nunjucks,JS,JavaScript,vanilla JS,vanilla JavaScript"
-    />
-
-    <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
-    <link
-      rel="apple-touch-icon"
-      sizes="180x180"
-      href="/assets/apple-touch-icon.png"
-    />
-
+    <title>Login - Facultyware</title>
     <link rel="stylesheet" href="/assets/styles.css" />
-
-    <script src="/assets/js/basecoat.js?v=0.3.11" defer></script>
-    <script src="/assets/js/command.js?v=0.3.11" defer></script>
-    <script src="/assets/js/dropdown-menu.js?v=0.3.11" defer></script>
-    <script src="/assets/js/popover.js?v=0.3.11" defer></script>
-    <script src="/assets/js/select.js?v=0.3.11" defer></script>
-    <script src="/assets/js/sidebar.js?v=0.3.11" defer></script>
-    <script src="/assets/js/tabs.js?v=0.3.11" defer></script>
-    <script src="/assets/js/toast.js?v=0.3.11" defer></script>
-
-    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/django.min.js"></script>
-    <script>
-      const highlight = () => {
-        if (!window.hljs) return;
-        document
-          .querySelectorAll(
-            "pre code:not([data-highlighted]), code.highlight:not([data-highlighted])",
-          )
-          .forEach((el) => hljs.highlightElement(el));
-      };
-
-      if (!window._hljsInit) {
-        window._hljsInit = true;
-        document.addEventListener("DOMContentLoaded", highlight);
-        document.addEventListener("htmx:afterSwap", highlight);
+    <style>
+      /* Custom Premium Styles for Login */
+      body {
+        background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 40%),
+                    radial-gradient(circle at bottom left, rgba(59, 130, 246, 0.05), transparent 40%),
+                    var(--background);
+        transition: background-color 0.3s ease;
       }
-    </script>
-    <script>
-      document.addEventListener("htmx:historyRestore", () => {
-        if (window.basecoat) window.basecoat.initAll();
-      });
-    </script>
+      .login-card {
+        border: 1px solid var(--border) !important;
+        background: rgba(var(--card), 0.8) !important;
+        backdrop-filter: blur(12px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+        border-radius: 1rem !important;
+        overflow: hidden;
+      }
+      .brand-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+        padding: 0.35rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        margin-bottom: 1rem;
+      }
+      .input-field {
+        transition: all 0.2s ease-in-out;
+      }
+      .input-field:focus {
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+      }
+      .btn-submit {
+        background-color: #3b82f6 !important;
+        color: #ffffff !important;
+        font-weight: 600 !important;
+        transition: all 0.2s ease-in-out !important;
+        box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2), 0 2px 4px -1px rgba(59, 130, 246, 0.1) !important;
+      }
+      .btn-submit:hover {
+        background-color: #2563eb !important;
+        transform: translateY(-1px);
+        box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3), 0 4px 6px -2px rgba(59, 130, 246, 0.15) !important;
+      }
+      .btn-submit:active {
+        transform: translateY(0);
+      }
+      .dark .login-card {
+        background: rgba(30, 41, 59, 0.7) !important;
+      }
+      .dark .brand-badge {
+        background: rgba(59, 130, 246, 0.2);
+        color: #60a5fa;
+      }
+    </style>
   </head>
-  <body
-    class="bg-background *:data-[slot=card]:has-[[data-slot=chart]]:shadow-none"
-  >
-    <div
-      class="flex min-h-svh flex-col items-center justify-center bg-muted p-6 md:p-10"
-    >
-      <div class="w-full max-w-sm md:max-w-4xl">
-        <div class="flex flex-col gap-6">
-          <div
-            data-slot="card"
-            class="flex flex-col gap-6 rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden p-0"
-          >
-            <div data-slot="card-content" class="grid p-0 md:grid-cols-2">
-              <form class="p-6 md:p-8" action="/login" method="POST">
-                <div
-                  data-slot="field-group"
-                  class="group/field-group @container/field-group flex w-full flex-col gap-7 data-[slot=checkbox-group]:gap-3 [&amp;&gt;[data-slot=field-group]]:gap-4"
-                >
-                  <div class="flex flex-col items-center gap-2 text-center">
-                    <h1 class="text-2xl font-bold">Welcome back</h1>
-                    <p class="text-balance text-muted-foreground">
-                      Login to your account
-                    </p>
-                  </div>
-                  
-                  <% if (error) { %>
-                    <div class="bg-destructive/15 text-destructive text-sm p-3 rounded-md border border-destructive/20 text-center">
-                      <%= error %>
-                    </div>
-                  <% } %>
+  <body class="bg-background min-h-svh flex flex-col justify-between">
+    <!-- Header/Logo area -->
+    <div class="w-full max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-2 font-bold text-lg text-foreground">
+        <div class="bg-blue-600 text-white p-1.5 rounded-lg shadow-md">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="size-5">
+            <path d="m7.5 4.27 9 5.15"/>
+            <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+            <path d="m3.3 7 8.7 5 8.7-5"/>
+            <path d="M12 22V12"/>
+          </svg>
+        </div>
+        <span>Facultyware</span>
+      </div>
+      <!-- Theme toggle or backup info -->
+      <span class="text-xs text-muted-foreground font-medium">Logistik & Inventori System</span>
+    </div>
 
-                  <div
-                    role="group"
-                    data-slot="field"
-                    data-orientation="vertical"
-                    class="group/field flex w-full gap-3 data-[invalid=true]:text-destructive flex-col [&amp;&gt;*]:w-full [&amp;&gt;.sr-only]:w-auto"
-                  >
-                    <label
-                      data-slot="field-label"
-                      class="items-center text-sm font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50 group/field-label peer/field-label flex w-fit gap-2 leading-snug group-data-[disabled=true]/field:opacity-50 has-[&gt;[data-slot=field]]:w-full has-[&gt;[data-slot=field]]:flex-col has-[&gt;[data-slot=field]]:rounded-md has-[&gt;[data-slot=field]]:border [&amp;&gt;*]:data-[slot=field]:p-4 has-data-[state=checked]:border-primary has-data-[state=checked]:bg-primary/5 dark:has-data-[state=checked]:bg-primary/10"
-                      for="username"
-                      >Username</label
-                    ><input
+    <!-- Login Card Container -->
+    <div class="flex-1 flex items-center justify-center p-6 md:p-10">
+      <div class="w-full max-w-sm md:max-w-4xl">
+        <div class="login-card rounded-2xl border bg-card text-card-foreground shadow-xl overflow-hidden p-0">
+          <div class="grid p-0 md:grid-cols-2">
+            
+            <!-- Left Column: Form -->
+            <form class="p-8 md:p-10 flex flex-col justify-center" action="/login" method="POST">
+              <div class="flex flex-col gap-6">
+                <div class="flex flex-col items-center md:items-start gap-1">
+                  <div class="brand-badge">Logistik Portal</div>
+                  <h1 class="text-2xl font-bold tracking-tight text-foreground">Selamat Datang</h1>
+                  <p class="text-sm text-muted-foreground text-center md:text-left">
+                    Masukkan akun Anda untuk mengelola inventori.
+                  </p>
+                </div>
+                
+                <% if (error) { %>
+                  <div class="bg-destructive/10 text-destructive text-sm p-3.5 rounded-lg border border-destructive/20 text-center font-medium animate-pulse">
+                    <%= error %>
+                  </div>
+                <% } %>
+
+                <div class="flex flex-col gap-4">
+                  <!-- Username Field -->
+                  <div class="flex flex-col gap-2">
+                    <label class="text-sm font-semibold text-foreground" for="username">Username / Email</label>
+                    <input
                       type="text"
                       name="username"
-                      data-slot="input"
-                      class="h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none selection:bg-primary selection:text-primary-foreground file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:bg-input/30 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40"
+                      class="input-field h-10 w-full rounded-lg border border-input bg-background/50 px-3.5 py-2 text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50 dark:bg-slate-900/30"
                       id="username"
-                      placeholder="admin"
-                      required=""
+                      placeholder="admin atau admin@facultyware.com"
+                      required
                     />
                   </div>
-                  <div
-                    role="group"
-                    data-slot="field"
-                    data-orientation="vertical"
-                    class="group/field flex w-full gap-3 data-[invalid=true]:text-destructive flex-col [&amp;&gt;*]:w-full [&amp;&gt;.sr-only]:w-auto"
-                  >
-                    <div class="flex items-center">
-                      <label
-                        data-slot="field-label"
-                        class="items-center text-sm font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50 group/field-label peer/field-label flex w-fit gap-2 leading-snug group-data-[disabled=true]/field:opacity-50 has-[&gt;[data-slot=field]]:w-full has-[&gt;[data-slot=field]]:flex-col has-[&gt;[data-slot=field]]:rounded-md has-[&gt;[data-slot=field]]:border [&amp;&gt;*]:data-[slot=field]:p-4 has-data-[state=checked]:border-primary has-data-[state=checked]:bg-primary/5 dark:has-data-[state=checked]:bg-primary/10"
-                        for="password"
-                        >Password</label
-                      ><a
-                        href="#"
-                        class="ml-auto text-sm underline-offset-2 hover:underline"
-                        >Forgot your password?</a
-                      >
+
+                  <!-- Password Field -->
+                  <div class="flex flex-col gap-2">
+                    <div class="flex items-center justify-between">
+                      <label class="text-sm font-semibold text-foreground" for="password">Password</label>
+                      <a href="#" class="text-xs text-blue-600 hover:underline">Lupa password?</a>
                     </div>
                     <input
                       type="password"
                       name="password"
-                      data-slot="input"
-                      class="h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none selection:bg-primary selection:text-primary-foreground file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:bg-input/30 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40"
+                      class="input-field h-10 w-full rounded-lg border border-input bg-background/50 px-3.5 py-2 text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50 dark:bg-slate-900/30"
                       id="password"
-                      required=""
+                      placeholder="••••••••"
+                      required
                     />
                   </div>
-                  <div
-                    role="group"
-                    data-slot="field"
-                    data-orientation="vertical"
-                    class="group/field flex w-full gap-3 data-[invalid=true]:text-destructive flex-col [&amp;&gt;*]:w-full [&amp;&gt;.sr-only]:w-auto"
-                  >
-                    <button
-                      data-slot="button"
-                      data-variant="default"
-                      data-size="default"
-                      class="inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 [&amp;_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 has-[&gt;svg]:px-3"
-                      type="submit"
-                    >
-                      Login
-                    </button>
-                  </div>
-
-                  <p
-                    data-slot="field-description"
-                    class="text-sm leading-normal font-normal text-muted-foreground group-has-[[data-orientation=horizontal]]/field:text-balance last:mt-0 nth-last-2:-mt-1 [[data-variant=legend]+&amp;]:-mt-1.5 [&amp;&gt;a]:underline [&amp;&gt;a]:underline-offset-4 [&amp;&gt;a:hover]:text-primary text-center"
-                  >
-                    Don't have an account? <a href="#">Sign up</a>
-                  </p>
                 </div>
-              </form>
-              <div class="relative hidden bg-muted md:block">
-                <img
-                  src="/assets/images/placeholder.svg"
-                  alt="Image"
-                  class="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
-                />
+
+                <button
+                  type="submit"
+                  class="btn-submit inline-flex h-10 items-center justify-center rounded-lg text-sm font-semibold shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                  Masuk Ke Dashboard
+                </button>
+
+                <p class="text-xs text-muted-foreground text-center">
+                  Butuh bantuan akses? Hubungi <a href="#" class="text-blue-600 hover:underline">System Administrator</a>
+                </p>
+              </div>
+            </form>
+            
+            <!-- Right Column: Artwork Image -->
+            <div class="relative hidden bg-slate-950 md:block">
+              <img
+                src="/assets/images/login_artwork.png"
+                alt="Branding Artwork"
+                class="absolute inset-0 h-full w-full object-cover opacity-85 dark:opacity-75"
+              />
+              <!-- Subtle overlay gradients -->
+              <div class="absolute inset-0 bg-gradient-to-r from-card via-transparent to-transparent pointer-events-none"></div>
+              <div class="absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-transparent pointer-events-none"></div>
+              
+              <!-- Subtle watermark brand in bottom right corner -->
+              <div class="absolute bottom-6 right-6 text-white/50 text-xs font-mono tracking-wider uppercase">
+                Facultyware System
               </div>
             </div>
+            
           </div>
-          <p
-            data-slot="field-description"
-            class="text-sm leading-normal font-normal text-muted-foreground group-has-[[data-orientation=horizontal]]/field:text-balance last:mt-0 nth-last-2:-mt-1 [[data-variant=legend]+&amp;]:-mt-1.5 [&amp;&gt;a]:underline [&amp;&gt;a]:underline-offset-4 [&amp;&gt;a:hover]:text-primary px-6 text-center"
-          >
-            By clicking continue, you agree to our
-            <a href="#">Terms of Service</a>
-            <!-- -->and <a href="#">Privacy Policy</a>.
-          </p>
         </div>
+      </div>
+    </div>
+
+    <!-- Footer area -->
+    <div class="w-full max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-2 border-t border-border/40 text-xs text-muted-foreground">
+      <p>&copy; 2026 Facultyware. All rights reserved.</p>
+      <div class="flex gap-4">
+        <a href="#" class="hover:text-foreground">Terms of Service</a>
+        <a href="#" class="hover:text-foreground">Privacy Policy</a>
       </div>
     </div>
     <div id="toaster" class="toaster"></div>

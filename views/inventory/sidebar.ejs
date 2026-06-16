@@ -109,6 +109,7 @@
     justify-content: space-between;
     width: 100%;
     cursor: pointer;
+    user-select: none;
   }
 
   .custom-sidebar .submenu-list {
@@ -117,6 +118,17 @@
     padding-left: 0.5rem;
     margin-top: 0.25rem;
     margin-bottom: 0.5rem;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .custom-sidebar .submenu-list.show {
+    max-height: 200px;
+  }
+
+  .custom-sidebar .submenu-title svg:last-child {
+    transition: transform 0.3s ease;
   }
 
   .custom-sidebar .submenu-link {
@@ -378,6 +390,30 @@
       const sidebar = document.querySelector('.custom-sidebar');
       if (sidebar) {
         sidebar.classList.toggle('open');
+      }
+    });
+
+    // Handle submenu toggle
+    const submenuTitle = document.querySelector('.submenu-title');
+    const submenuList = document.querySelector('.submenu-list');
+    const arrowIcon = submenuTitle.querySelector('svg:last-child');
+
+    // Set active state icon rotation on load if parent is active
+    const isSubmenuActive = <%= ['stock', 'opname', 'history'].includes(activePage) ? 'true' : 'false' %>;
+    if (isSubmenuActive) {
+      submenuList.classList.add('show');
+      submenuList.style.maxHeight = submenuList.scrollHeight + 'px';
+      arrowIcon.style.transform = 'rotate(180deg)';
+    }
+
+    submenuTitle.addEventListener('click', () => {
+      const isShown = submenuList.classList.toggle('show');
+      if (isShown) {
+        submenuList.style.maxHeight = submenuList.scrollHeight + 'px';
+        arrowIcon.style.transform = 'rotate(180deg)';
+      } else {
+        submenuList.style.maxHeight = '0';
+        arrowIcon.style.transform = 'rotate(0deg)';
       }
     });
   });
