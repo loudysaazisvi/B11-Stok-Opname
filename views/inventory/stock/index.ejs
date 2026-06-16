@@ -4,8 +4,37 @@
   <script>(() => { try { const s = localStorage.getItem("themeMode"); if (s ? s === "dark" : matchMedia("(prefers-color-scheme: dark)").matches) document.documentElement.classList.add("dark"); } catch(_){} })();</script>
   <meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Laporan Stok - Facultyware</title>
+  <meta name="description" content="Lihat dan monitor stok barang inventaris fakultas"/>
   <link rel="stylesheet" href="/assets/styles.css"/>
   <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+  <style>
+    .stat-card { background:var(--card); border:1px solid var(--border); border-radius:0.75rem; padding:1.25rem 1.5rem; display:flex; align-items:flex-start; gap:1rem; transition:box-shadow 0.2s,transform 0.2s; }
+    .stat-card:hover { transform:translateY(-1px); box-shadow:0 8px 25px -5px rgba(0,0,0,.12); }
+    .stat-icon { width:2.5rem; height:2.5rem; border-radius:0.6rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .stat-icon.blue  { background:rgba(59,130,246,.12); color:#3b82f6; }
+    .stat-icon.green { background:rgba(34,197,94,.12);  color:#22c55e; }
+    .stat-icon.red   { background:rgba(239,68,68,.12);  color:#ef4444; }
+    .stat-icon.amber { background:rgba(245,158,11,.12); color:#f59e0b; }
+    .stat-value { font-size:1.6rem; font-weight:700; line-height:1; }
+    .stat-label { font-size:0.75rem; color:var(--muted-foreground); margin-top:0.2rem; }
+    .data-table { width:100%; border-collapse:collapse; font-size:0.875rem; }
+    .data-table thead th { padding:0.75rem 1rem; font-weight:600; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted-foreground); background:var(--muted); border-bottom:1px solid var(--border); text-align:left; white-space:nowrap; }
+    .data-table tbody td { padding:0.875rem 1rem; border-bottom:1px solid var(--border); vertical-align:middle; }
+    .data-table tbody tr:last-child td { border-bottom:none; }
+    .data-table tbody tr { transition:background-color 0.15s; }
+    .data-table tbody tr:hover { background:rgba(59,130,246,.03); }
+    .dark .data-table tbody tr:hover { background:rgba(255,255,255,.02); }
+    .badge { display:inline-flex; align-items:center; padding:0.2rem 0.6rem; border-radius:9999px; font-size:0.7rem; font-weight:600; }
+    .badge-danger  { background:rgba(239,68,68,.12);  color:#dc2626; }
+    .badge-success { background:rgba(34,197,94,.12);  color:#16a34a; }
+    .dark .badge-danger  { background:rgba(239,68,68,.2);  color:#f87171; }
+    .dark .badge-success { background:rgba(34,197,94,.2);  color:#4ade80; }
+    .code-chip { font-family:monospace; font-size:0.72rem; background:var(--muted); color:var(--muted-foreground); padding:0.15rem 0.4rem; border-radius:0.3rem; border:1px solid var(--border); }
+    .alert-success { background:rgba(34,197,94,.08); border:1px solid rgba(34,197,94,.25); color:#15803d; border-radius:0.5rem; padding:0.75rem 1rem; font-size:0.875rem; }
+    .alert-error   { background:rgba(239,68,68,.08);  border:1px solid rgba(239,68,68,.25);  color:#dc2626; border-radius:0.5rem; padding:0.75rem 1rem; font-size:0.875rem; }
+    .dark .alert-success { background:rgba(34,197,94,.12);  color:#4ade80; }
+    .dark .alert-error   { background:rgba(239,68,68,.12);  color:#f87171; }
+  </style>
 </head>
 <body>
   <%- include('../sidebar', { activePage: 'stock', user: user }) %>
@@ -16,100 +45,157 @@
         <button type="button" onclick="document.dispatchEvent(new CustomEvent('basecoat:sidebar'))" class="btn-sm-icon-ghost mr-2 size-7 -ml-1.5">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg>
         </button>
-        <span class="font-semibold text-sm">Laporan Stok Barang</span>
+        <div class="flex-1">
+          <span class="font-semibold text-sm">Laporan Stok Barang</span>
+          <span class="text-xs text-muted-foreground ml-2">Monitor kondisi stok saat ini</span>
+        </div>
+        <a href="/inventory/stock/report" class="btn-sm-outline" style="font-size:0.8rem">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          Buat Laporan
+        </a>
       </div>
     </header>
 
-    <div class="p-6 space-y-4">
-      <% if (success) { %><div class="rounded-md bg-green-50 border border-green-200 px-4 py-3 text-green-800 text-sm"><%= success %></div><% } %>
-      <% if (error) { %><div class="rounded-md bg-red-50 border border-red-200 px-4 py-3 text-red-800 text-sm"><%= error %></div><% } %>
+    <div class="p-6 space-y-5">
+      <% if (success) { %><div class="alert-success"><%= success %></div><% } %>
+      <% if (error) { %><div class="alert-error"><%= error %></div><% } %>
 
+      <%# Stat Cards %>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="stat-card">
+          <div class="stat-icon blue">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/></svg>
+          </div>
+          <div>
+            <div class="stat-value"><%= totalData %></div>
+            <div class="stat-label">Total Barang</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <div>
+            <div class="stat-value" style="color:#22c55e"><%= items.filter(i => i.stock >= i.minimal_quantity).length %></div>
+            <div class="stat-label">Stok Normal</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon red">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+          </div>
+          <div>
+            <div class="stat-value" style="color:#ef4444"><%= items.filter(i => i.stock < i.minimal_quantity && i.minimal_quantity > 0).length %></div>
+            <div class="stat-label">Stok Rendah</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon amber">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>
+          </div>
+          <div>
+            <div class="stat-value" style="color:#f59e0b"><%= items.filter(i => i.stock === 0).length %></div>
+            <div class="stat-label">Stok Habis</div>
+          </div>
+        </div>
+      </div>
+
+      <%# Filter %>
       <div class="card">
         <section>
           <form method="GET" action="/inventory/stock" class="flex gap-3 flex-wrap items-end">
             <div class="grid gap-1 flex-1 min-w-[200px]">
               <label class="text-sm font-medium">Cari Barang</label>
-              <input type="text" name="search" value="<%= search %>" placeholder="Nama atau kode..." class="input"/>
+              <input type="text" name="search" value="<%= search %>" placeholder="Nama atau kode barang..." class="input"/>
             </div>
             <div class="grid gap-1">
-              <label class="text-sm font-medium">Filter</label>
+              <label class="text-sm font-medium">Filter Status</label>
               <select name="filter" class="input">
-                <option value="" <%= filter==='' ? 'selected' : '' %>>Semua</option>
-                <option value="low" <%= filter==='low' ? 'selected' : '' %>>Stok Rendah</option>
+                <option value="" <%= filter==='' ? 'selected' : '' %>>Semua Barang</option>
+                <option value="low" <%= filter==='low' ? 'selected' : '' %>>⚠ Stok Rendah</option>
               </select>
             </div>
-            <button type="submit" class="btn-sm">Tampilkan</button>
-            <% if (search || filter) { %><a href="/inventory/stock" class="btn-sm-outline">Reset</a><% } %>
+            <div class="flex gap-2 items-end">
+              <button type="submit" class="btn-sm">Tampilkan</button>
+              <% if (search || filter) { %><a href="/inventory/stock" class="btn-sm-outline">Reset</a><% } %>
+            </div>
           </form>
         </section>
       </div>
 
-      <div class="card">
-        <section class="p-0">
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-              <thead class="border-b">
-                <tr class="text-left">
-                  <th class="px-4 py-3 font-medium">No</th>
-                  <th class="px-4 py-3 font-medium">Kode</th>
-                  <th class="px-4 py-3 font-medium">Nama Barang</th>
-                  <th class="px-4 py-3 font-medium">Satuan</th>
-                  <th class="px-4 py-3 font-medium">Stok Minimal</th>
-                  <th class="px-4 py-3 font-medium">Stok Saat Ini</th>
-                  <th class="px-4 py-3 font-medium">Status</th>
-                  <th class="px-4 py-3 font-medium">Aksi</th>
+      <%# Tabel Stok %>
+      <div class="card" style="padding:0; overflow:hidden;">
+        <div class="overflow-x-auto">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width:40px">No</th>
+                <th>Kode</th>
+                <th>Nama Barang</th>
+                <th>Satuan</th>
+                <th style="text-align:center">Stok Min.</th>
+                <th style="text-align:center">Stok Saat Ini</th>
+                <th style="text-align:center">Status</th>
+                <th style="text-align:center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (items.length === 0) { %>
+                <tr>
+                  <td colspan="8" style="padding:3rem 1rem; text-align:center; color:var(--muted-foreground)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 0.75rem; opacity:0.3; display:block"><rect width="18" height="18" x="3" y="3" rx="2"/></svg>
+                    Tidak ada data stok
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                <% if (items.length === 0) { %>
-                  <tr><td colspan="8" class="px-4 py-8 text-center text-muted-foreground">Tidak ada data</td></tr>
-                <% } else { %>
-                  <% items.forEach((item, idx) => { %>
-                    <tr class="border-b hover:bg-muted/50">
-                      <td class="px-4 py-3"><%= (currentPage-1)*10+idx+1 %></td>
-                      <td class="px-4 py-3 font-mono text-xs"><%= item.code %></td>
-                      <td class="px-4 py-3 font-medium"><%= item.name %></td>
-                      <td class="px-4 py-3"><%= item.unit %></td>
-                      <td class="px-4 py-3"><%= item.minimal_quantity %></td>
-                      <td class="px-4 py-3">
-                        <span class="<%= item.stock < item.minimal_quantity ? 'text-red-600 font-bold' : 'text-green-700 font-semibold' %>">
-                          <%= item.stock %>
-                        </span>
-                      </td>
-                      <td class="px-4 py-3">
-                        <% if (item.stock < item.minimal_quantity) { %>
-                          <span class="bg-red-100 text-red-700 text-xs px-2 py-0.5 rounded">Stok Rendah</span>
-                        <% } else { %>
-                          <span class="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded">Normal</span>
-                        <% } %>
-                      </td>
-                      <td class="px-4 py-3">
-                        <div class="flex gap-1">
-                          <a href="/inventory/stock/<%= item.id %>/history" class="btn-sm-outline">Riwayat</a>
-                          <a href="/inventory/stock/<%= item.id %>/adjustment" class="btn-sm">Opname</a>
-                        </div>
-                      </td>
-                    </tr>
-                  <% }) %>
-                <% } %>
-              </tbody>
-            </table>
-          </div>
-        </section>
+              <% } else { %>
+                <% items.forEach((item, idx) => { %>
+                  <tr>
+                    <td style="color:var(--muted-foreground); font-size:0.8rem"><%= (currentPage-1)*10+idx+1 %></td>
+                    <td><span class="code-chip"><%= item.code %></span></td>
+                    <td style="font-weight:500"><%= item.name %></td>
+                    <td style="color:var(--muted-foreground)"><%= item.unit %></td>
+                    <td style="text-align:center"><%= item.minimal_quantity %></td>
+                    <td style="text-align:center">
+                      <span style="font-weight:700; font-size:1.05rem; color:<%= item.stock < item.minimal_quantity ? '#ef4444' : item.stock === 0 ? '#f59e0b' : '#22c55e' %>">
+                        <%= item.stock %>
+                      </span>
+                    </td>
+                    <td style="text-align:center">
+                      <% if (item.stock === 0) { %>
+                        <span class="badge" style="background:rgba(245,158,11,.12); color:#b45309;">◉ Habis</span>
+                      <% } else if (item.stock < item.minimal_quantity) { %>
+                        <span class="badge badge-danger">⚠ Rendah</span>
+                      <% } else { %>
+                        <span class="badge badge-success">✓ Normal</span>
+                      <% } %>
+                    </td>
+                    <td style="text-align:center">
+                      <div class="flex gap-1 justify-center">
+                        <a href="/inventory/stock/<%= item.id %>/history" class="btn-sm-outline" style="font-size:0.75rem; padding:0.25rem 0.6rem">Riwayat</a>
+                        <a href="/inventory/stock/<%= item.id %>/adjustment" class="btn-sm" style="font-size:0.75rem; padding:0.25rem 0.6rem">Opname</a>
+                      </div>
+                    </td>
+                  </tr>
+                <% }) %>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
         <% if (totalPages > 1) { %>
-        <footer class="flex items-center justify-between px-4 py-3 border-t">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:0.75rem 1rem; border-top:1px solid var(--border);">
           <span class="text-sm text-muted-foreground">Total: <%= totalData %> barang</span>
           <div class="flex gap-1">
             <% for (let i = 1; i <= totalPages; i++) { %>
               <a href="/inventory/stock?page=<%= i %>&search=<%= search %>&filter=<%= filter %>"
-                 class="btn-sm-<%= i===currentPage?'':'outline' %>"><%= i %></a>
+                 class="btn-sm<%= i===currentPage?'':'-outline' %>" style="min-width:2rem; text-align:center; padding:0.25rem 0.5rem; font-size:0.8rem"><%= i %></a>
             <% } %>
           </div>
-        </footer>
+        </div>
         <% } %>
       </div>
     </div>
   </main>
+
   <div id="toaster" class="toaster"></div>
   <script src="/assets/js/sidebar.js"></script>
 </body>

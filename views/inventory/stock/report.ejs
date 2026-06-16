@@ -4,7 +4,30 @@
   <script>(() => { try { const s = localStorage.getItem("themeMode"); if (s ? s === "dark" : matchMedia("(prefers-color-scheme: dark)").matches) document.documentElement.classList.add("dark"); } catch(_){} })();</script>
   <meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Laporan Opname - Facultyware</title>
+  <meta name="description" content="Generate laporan stok opname per periode"/>
   <link rel="stylesheet" href="/assets/styles.css"/>
+  <style>
+    .data-table { width:100%; border-collapse:collapse; font-size:0.875rem; }
+    .data-table thead th { padding:0.75rem 1rem; font-weight:600; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted-foreground); background:var(--muted); border-bottom:1px solid var(--border); text-align:left; white-space:nowrap; }
+    .data-table tbody td { padding:0.875rem 1rem; border-bottom:1px solid var(--border); vertical-align:middle; }
+    .data-table tbody tr:last-child td { border-bottom:none; }
+    .data-table tbody tr { transition:background-color 0.15s; }
+    .data-table tbody tr:hover { background:rgba(59,130,246,.03); }
+    .dark .data-table tbody tr:hover { background:rgba(255,255,255,.02); }
+    .qty-positive { color:#16a34a; font-weight:700; }
+    .qty-negative { color:#dc2626; font-weight:700; }
+    .dark .qty-positive { color:#4ade80; }
+    .dark .qty-negative { color:#f87171; }
+    .page-header-card { background:var(--card); border:1px solid var(--border); border-radius:0.75rem; padding:1.25rem 1.5rem; }
+    .page-header-card h2 { font-size:0.95rem; font-weight:700; margin:0 0 0.25rem; }
+    .page-header-card p  { font-size:0.78rem; color:var(--muted-foreground); margin:0; }
+    .alert-error { background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.25); color:#dc2626; border-radius:0.5rem; padding:0.75rem 1rem; font-size:0.875rem; margin-bottom:1rem; }
+    .dark .alert-error { background:rgba(239,68,68,.12); color:#f87171; }
+    .result-summary { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.75rem; margin-bottom:0.5rem; }
+    .result-badge { display:inline-flex; align-items:center; gap:0.4rem; background:rgba(59,130,246,.1); color:#2563eb; border-radius:0.4rem; padding:0.35rem 0.75rem; font-size:0.8rem; font-weight:600; }
+    .dark .result-badge { background:rgba(59,130,246,.18); color:#60a5fa; }
+    .code-chip { font-family:monospace; font-size:0.72rem; background:var(--muted); color:var(--muted-foreground); padding:0.15rem 0.4rem; border-radius:0.3rem; border:1px solid var(--border); }
+  </style>
 </head>
 <body>
   <%- include('../sidebar', { activePage: 'opname', user: user }) %>
@@ -15,104 +38,144 @@
         <button type="button" onclick="document.dispatchEvent(new CustomEvent('basecoat:sidebar'))" class="btn-sm-icon-ghost mr-2 size-7 -ml-1.5">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg>
         </button>
-        <span class="font-semibold text-sm">Laporan Stok Opname</span>
+        <div class="flex-1">
+          <span class="font-semibold text-sm">Laporan Stok Opname</span>
+          <span class="text-xs text-muted-foreground ml-2">Generate laporan per periode</span>
+        </div>
+        <a href="/inventory/stock/report/history" class="btn-sm-outline" style="font-size:0.8rem">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+          Riwayat Laporan
+        </a>
       </div>
     </header>
 
-    <div class="p-6 space-y-4">
-      <!-- Form periode -->
+    <div class="p-6 space-y-5">
+
+      <!-- Form Periode -->
+      <div class="page-header-card">
+        <h2>
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline; vertical-align:-2px; margin-right:6px"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+          Generate Laporan
+        </h2>
+        <p>Pilih rentang tanggal untuk menghasilkan laporan stok opname</p>
+      </div>
+
       <div class="card">
-        <header><h2>Generate Laporan</h2><p class="text-muted-foreground text-sm">Pilih periode untuk menampilkan laporan stok opname</p></header>
         <section>
           <% if (errors.length > 0) { %>
-            <div class="rounded-md bg-red-50 border border-red-200 px-4 py-3 text-red-800 text-sm mb-4">
-              <% errors.forEach(e => { %><p><%= e %></p><% }) %>
+            <div class="alert-error">
+              <% errors.forEach(e => { %><p style="margin:0"><%= e %></p><% }) %>
             </div>
           <% } %>
           <form method="GET" action="/inventory/stock/report" class="flex gap-3 flex-wrap items-end" id="reportForm">
             <div class="grid gap-1">
-              <label class="text-sm font-medium">Dari Tanggal <span class="text-red-500">*</span></label>
+              <label class="text-sm font-medium">Dari Tanggal <span style="color:#ef4444">*</span></label>
               <input type="date" name="start" value="<%= start %>" class="input" required/>
             </div>
             <div class="grid gap-1">
-              <label class="text-sm font-medium">Sampai Tanggal <span class="text-red-500">*</span></label>
+              <label class="text-sm font-medium">Sampai Tanggal <span style="color:#ef4444">*</span></label>
               <input type="date" name="end" value="<%= end %>" class="input" required/>
             </div>
-            <button type="submit" class="btn-sm">Tampilkan</button>
-            <% if (start && end && data.length > 0) { %>
-              <a href="/inventory/stock/report/export/pdf?start=<%= start %>&end=<%= end %>" class="btn-sm-outline" target="_blank">Export PDF</a>
-              <a href="/inventory/stock/report/export/excel?start=<%= start %>&end=<%= end %>" class="btn-sm-outline">Export Excel</a>
-            <% } %>
+            <div class="flex gap-2 items-end">
+              <button type="submit" class="btn-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                Tampilkan
+              </button>
+              <% if (start && end && data.length > 0) { %>
+                <a href="/inventory/stock/report/export/pdf?start=<%= start %>&end=<%= end %>" class="btn-sm-outline" target="_blank" style="font-size:0.8rem">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                  PDF
+                </a>
+                <a href="/inventory/stock/report/export/excel?start=<%= start %>&end=<%= end %>" class="btn-sm-outline" style="font-size:0.8rem">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/></svg>
+                  Excel
+                </a>
+              <% } %>
+            </div>
           </form>
         </section>
       </div>
 
-      <!-- Hasil laporan -->
+      <!-- Hasil Laporan -->
       <% if (start && end && errors.length === 0) { %>
-      <div class="card">
-        <header>
-          <h2>Hasil Laporan</h2>
-          <p class="text-muted-foreground text-sm">Periode: <%= start %> s/d <%= end %> — Total: <%= totalData %> transaksi opname</p>
-        </header>
-        <section class="p-0">
+      <div>
+        <div class="result-summary">
+          <div>
+            <h3 style="font-size:0.9rem; font-weight:700; margin:0 0 0.2rem">Hasil Laporan Opname</h3>
+            <p style="font-size:0.78rem; color:var(--muted-foreground); margin:0">
+              Periode: <strong><%= start %></strong> s/d <strong><%= end %></strong>
+            </p>
+          </div>
+          <span class="result-badge">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+            <%= totalData %> transaksi opname
+          </span>
+        </div>
+
+        <div class="card" style="padding:0; overflow:hidden;">
           <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-              <thead class="border-b">
-                <tr class="text-left">
-                  <th class="px-4 py-3 font-medium">No</th>
-                  <th class="px-4 py-3 font-medium">Tanggal</th>
-                  <th class="px-4 py-3 font-medium">Kode</th>
-                  <th class="px-4 py-3 font-medium">Nama Barang</th>
-                  <th class="px-4 py-3 font-medium">Selisih</th>
-                  <th class="px-4 py-3 font-medium">Referensi</th>
-                  <th class="px-4 py-3 font-medium">Keterangan</th>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>No</th>
+                  <th>Tanggal</th>
+                  <th>Kode</th>
+                  <th>Nama Barang</th>
+                  <th style="text-align:center">Selisih</th>
+                  <th>Referensi</th>
+                  <th>Keterangan</th>
                 </tr>
               </thead>
               <tbody>
                 <% if (data.length === 0) { %>
-                  <tr><td colspan="7" class="px-4 py-8 text-center text-muted-foreground">Tidak ada data opname pada periode ini</td></tr>
+                  <tr>
+                    <td colspan="7" style="padding:3rem 1rem; text-align:center; color:var(--muted-foreground)">
+                      Tidak ada data opname pada periode ini
+                    </td>
+                  </tr>
                 <% } else { %>
                   <% data.forEach((row, idx) => { %>
-                    <tr class="border-b hover:bg-muted/50">
-                      <td class="px-4 py-3"><%= (currentPage-1)*15+idx+1 %></td>
-                      <td class="px-4 py-3"><%= String(row.transaction_date).substring(0,10) %></td>
-                      <td class="px-4 py-3 font-mono text-xs"><%= row.item_code %></td>
-                      <td class="px-4 py-3 font-medium"><%= row.item_name %></td>
-                      <td class="px-4 py-3 font-semibold <%= row.quantity > 0 ? 'text-green-700' : row.quantity < 0 ? 'text-red-600' : '' %>">
-                        <%= row.quantity > 0 ? '+' : '' %><%= row.quantity %> <%= row.unit %>
+                    <tr>
+                      <td style="color:var(--muted-foreground); font-size:0.8rem"><%= (currentPage-1)*15+idx+1 %></td>
+                      <td style="font-size:0.85rem"><%= String(row.transaction_date).substring(0,10) %></td>
+                      <td><span class="code-chip"><%= row.item_code %></span></td>
+                      <td style="font-weight:500"><%= row.item_name %></td>
+                      <td style="text-align:center" class="<%= row.quantity > 0 ? 'qty-positive' : row.quantity < 0 ? 'qty-negative' : '' %>">
+                        <%= row.quantity > 0 ? '+' : '' %><%= row.quantity %> <span style="font-weight:400; font-size:0.78rem; color:var(--muted-foreground)"><%= row.unit %></span>
                       </td>
-                      <td class="px-4 py-3 text-muted-foreground"><%= row.reference || '-' %></td>
-                      <td class="px-4 py-3"><%= row.notes %></td>
+                      <td style="font-family:monospace; font-size:0.78rem; color:var(--muted-foreground)"><%= row.reference || '—' %></td>
+                      <td style="font-size:0.85rem"><%= row.notes %></td>
                     </tr>
                   <% }) %>
                 <% } %>
               </tbody>
             </table>
           </div>
-        </section>
-        <% if (totalPages > 1) { %>
-        <footer class="flex items-center justify-between px-4 py-3 border-t">
-          <span class="text-sm text-muted-foreground">Halaman <%= currentPage %> dari <%= totalPages %></span>
-          <div class="flex gap-1">
-            <% for (let i = 1; i <= totalPages; i++) { %>
-              <a href="/inventory/stock/report?page=<%= i %>&start=<%= start %>&end=<%= end %>"
-                 class="btn-sm-<%= i===currentPage?'':'outline' %>"><%= i %></a>
-            <% } %>
+          <% if (totalPages > 1) { %>
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:0.75rem 1rem; border-top:1px solid var(--border);">
+            <span class="text-sm text-muted-foreground">Halaman <%= currentPage %> dari <%= totalPages %></span>
+            <div class="flex gap-1">
+              <% for (let i = 1; i <= totalPages; i++) { %>
+                <a href="/inventory/stock/report?page=<%= i %>&start=<%= start %>&end=<%= end %>"
+                   class="btn-sm<%= i===currentPage?'':'-outline' %>" style="min-width:2rem; text-align:center; padding:0.25rem 0.5rem; font-size:0.8rem"><%= i %></a>
+              <% } %>
+            </div>
           </div>
-        </footer>
-        <% } %>
+          <% } %>
+        </div>
       </div>
       <% } %>
     </div>
   </main>
+
   <div id="toaster" class="toaster"></div>
   <script src="/assets/js/sidebar.js"></script>
   <script>
     document.getElementById('reportForm').addEventListener('submit', function(e) {
-      const start = this.querySelector('[name=start]').value;
-      const end = this.querySelector('[name=end]').value;
-      if (!start || !end) { e.preventDefault(); alert('Tanggal mulai dan akhir wajib diisi'); return; }
-      if (new Date(start) > new Date(end)) { e.preventDefault(); alert('Tanggal mulai tidak boleh lebih dari tanggal akhir'); }
+      const s = this.querySelector('[name=start]').value;
+      const en = this.querySelector('[name=end]').value;
+      if (!s || !en) { e.preventDefault(); alert('Tanggal mulai dan akhir wajib diisi'); return; }
+      if (new Date(s) > new Date(en)) { e.preventDefault(); alert('Tanggal mulai tidak boleh lebih dari tanggal akhir'); }
     });
   </script>
 </body>

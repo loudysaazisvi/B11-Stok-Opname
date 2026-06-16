@@ -3,8 +3,33 @@
 <head>
   <script>(() => { try { const s = localStorage.getItem("themeMode"); if (s ? s === "dark" : matchMedia("(prefers-color-scheme: dark)").matches) document.documentElement.classList.add("dark"); } catch(_){} })();</script>
   <meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Riwayat Stok - Facultyware</title>
+  <title>Riwayat Stok - <%= item.name %> - Facultyware</title>
   <link rel="stylesheet" href="/assets/styles.css"/>
+  <style>
+    .info-banner { background:var(--card); border:1px solid var(--border); border-radius:0.75rem; padding:1.25rem 1.5rem; }
+    .info-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:1rem; }
+    @media(min-width:768px) { .info-grid { grid-template-columns:repeat(4,1fr); } }
+    .info-cell .lbl { font-size:0.7rem; color:var(--muted-foreground); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.25rem; }
+    .info-cell .val { font-size:0.95rem; font-weight:600; }
+    .data-table { width:100%; border-collapse:collapse; font-size:0.875rem; }
+    .data-table thead th { padding:0.75rem 1rem; font-weight:600; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted-foreground); background:var(--muted); border-bottom:1px solid var(--border); text-align:left; white-space:nowrap; }
+    .data-table tbody td { padding:0.875rem 1rem; border-bottom:1px solid var(--border); vertical-align:middle; }
+    .data-table tbody tr:last-child td { border-bottom:none; }
+    .data-table tbody tr { transition:background-color 0.15s; }
+    .data-table tbody tr:hover { background:rgba(59,130,246,.03); }
+    .dark .data-table tbody tr:hover { background:rgba(255,255,255,.02); }
+    .tx-badge { display:inline-flex; align-items:center; padding:0.2rem 0.55rem; border-radius:9999px; font-size:0.7rem; font-weight:700; letter-spacing:0.03em; }
+    .tx-in   { background:rgba(34,197,94,.12);  color:#16a34a; }
+    .tx-out  { background:rgba(239,68,68,.12);  color:#dc2626; }
+    .tx-adj  { background:rgba(59,130,246,.12); color:#2563eb; }
+    .dark .tx-in   { background:rgba(34,197,94,.2);  color:#4ade80; }
+    .dark .tx-out  { background:rgba(239,68,68,.2);  color:#f87171; }
+    .dark .tx-adj  { background:rgba(59,130,246,.2); color:#60a5fa; }
+    .qty-positive { color:#16a34a; font-weight:700; }
+    .qty-negative { color:#dc2626; font-weight:700; }
+    .dark .qty-positive { color:#4ade80; }
+    .dark .qty-negative { color:#f87171; }
+  </style>
 </head>
 <body>
   <%- include('../sidebar', { activePage: 'stock', user: user }) %>
@@ -15,28 +40,43 @@
         <button type="button" onclick="document.dispatchEvent(new CustomEvent('basecoat:sidebar'))" class="btn-sm-icon-ghost mr-2 size-7 -ml-1.5">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg>
         </button>
-        <a href="/inventory/stock" class="text-sm text-muted-foreground hover:underline">Laporan Stok</a>
-        <span class="text-muted-foreground">/</span>
-        <span class="text-sm font-medium">Riwayat: <%= item.name %></span>
-        <div class="ml-auto">
-          <a href="/inventory/stock/<%= item.id %>/adjustment" class="btn-sm">+ Opname Baru</a>
+        <div class="flex items-center gap-1.5 text-sm flex-1">
+          <a href="/inventory/stock" class="text-muted-foreground hover:text-foreground transition-colors">Laporan Stok</a>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted-foreground"><path d="m9 18 6-6-6-6"/></svg>
+          <span class="font-semibold">Riwayat: <%= item.name %></span>
         </div>
+        <a href="/inventory/stock/<%= item.id %>/adjustment" class="btn-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+          Opname Baru
+        </a>
       </div>
     </header>
 
-    <div class="p-6 space-y-4">
-      <!-- Info Barang -->
-      <div class="card">
-        <section class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-          <div><span class="text-muted-foreground block">Kode</span><span class="font-mono font-medium"><%= item.code %></span></div>
-          <div><span class="text-muted-foreground block">Nama</span><span class="font-medium"><%= item.name %></span></div>
-          <div><span class="text-muted-foreground block">Satuan</span><span><%= item.unit %></span></div>
-          <div><span class="text-muted-foreground block">Stok Saat Ini</span>
-            <span class="text-lg font-bold <%= currentStock < item.minimal_quantity ? 'text-red-600' : 'text-green-700' %>">
-              <%= currentStock %>
-            </span>
+    <div class="p-6 space-y-5">
+
+      <!-- Info Barang Banner -->
+      <div class="info-banner">
+        <div class="info-grid">
+          <div class="info-cell">
+            <div class="lbl">Kode Barang</div>
+            <div class="val" style="font-family:monospace"><%= item.code %></div>
           </div>
-        </section>
+          <div class="info-cell">
+            <div class="lbl">Nama Barang</div>
+            <div class="val"><%= item.name %></div>
+          </div>
+          <div class="info-cell">
+            <div class="lbl">Satuan</div>
+            <div class="val"><%= item.unit %></div>
+          </div>
+          <div class="info-cell">
+            <div class="lbl">Stok Saat Ini</div>
+            <div class="val" style="font-size:1.4rem; color:<%= currentStock < item.minimal_quantity ? '#ef4444' : '#22c55e' %>">
+              <%= currentStock %>
+              <span style="font-size:0.75rem; font-weight:400; color:var(--muted-foreground)"><%= item.unit %></span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Filter -->
@@ -47,9 +87,9 @@
               <label class="text-sm font-medium">Jenis Transaksi</label>
               <select name="type" class="input">
                 <option value="" <%= filterType===''?'selected':'' %>>Semua</option>
-                <option value="IN" <%= filterType==='IN'?'selected':'' %>>Masuk (IN)</option>
-                <option value="OUT" <%= filterType==='OUT'?'selected':'' %>>Keluar (OUT)</option>
-                <option value="ADJUSTMENT" <%= filterType==='ADJUSTMENT'?'selected':'' %>>Opname</option>
+                <option value="IN" <%= filterType==='IN'?'selected':'' %>>▲ Masuk (IN)</option>
+                <option value="OUT" <%= filterType==='OUT'?'selected':'' %>>▼ Keluar (OUT)</option>
+                <option value="ADJUSTMENT" <%= filterType==='ADJUSTMENT'?'selected':'' %>>⚖ Opname</option>
               </select>
             </div>
             <div class="grid gap-1">
@@ -60,68 +100,77 @@
               <label class="text-sm font-medium">Sampai Tanggal</label>
               <input type="date" name="end" value="<%= filterEnd %>" class="input"/>
             </div>
-            <button type="submit" class="btn-sm">Filter</button>
-            <a href="/inventory/stock/<%= item.id %>/history" class="btn-sm-outline">Reset</a>
+            <div class="flex gap-2 items-end">
+              <button type="submit" class="btn-sm">Filter</button>
+              <a href="/inventory/stock/<%= item.id %>/history" class="btn-sm-outline">Reset</a>
+            </div>
           </form>
         </section>
       </div>
 
       <!-- Tabel Riwayat -->
-      <div class="card">
-        <section class="p-0">
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-              <thead class="border-b">
-                <tr class="text-left">
-                  <th class="px-4 py-3 font-medium">No</th>
-                  <th class="px-4 py-3 font-medium">Tanggal</th>
-                  <th class="px-4 py-3 font-medium">Jenis</th>
-                  <th class="px-4 py-3 font-medium">Selisih</th>
-                  <th class="px-4 py-3 font-medium">Referensi</th>
-                  <th class="px-4 py-3 font-medium">Keterangan</th>
+      <div class="card" style="padding:0; overflow:hidden;">
+        <div class="overflow-x-auto">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>Tanggal</th>
+                <th>Jenis</th>
+                <th style="text-align:center">Selisih</th>
+                <th>Referensi</th>
+                <th>Keterangan</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (transactions.length === 0) { %>
+                <tr>
+                  <td colspan="6" style="padding:3rem 1rem; text-align:center; color:var(--muted-foreground)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 0.6rem; opacity:0.3; display:block"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+                    Belum ada riwayat transaksi
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                <% if (transactions.length === 0) { %>
-                  <tr><td colspan="6" class="px-4 py-8 text-center text-muted-foreground">Belum ada riwayat transaksi</td></tr>
-                <% } else { %>
-                  <% transactions.forEach((tx, idx) => { %>
-                    <tr class="border-b hover:bg-muted/50">
-                      <td class="px-4 py-3"><%= (currentPage-1)*10+idx+1 %></td>
-                      <td class="px-4 py-3"><%= String(tx.transaction_date).substring(0,10) %></td>
-                      <td class="px-4 py-3">
-                        <span class="text-xs px-2 py-0.5 rounded
-                          <%= tx.type==='IN' ? 'bg-green-100 text-green-700' : tx.type==='OUT' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700' %>">
-                          <%= tx.type %>
-                        </span>
-                      </td>
-                      <td class="px-4 py-3 font-semibold <%= tx.quantity > 0 ? 'text-green-700' : 'text-red-600' %>">
-                        <%= tx.quantity > 0 ? '+' : '' %><%= tx.quantity %> <%= item.unit %>
-                      </td>
-                      <td class="px-4 py-3 text-muted-foreground"><%= tx.reference || '-' %></td>
-                      <td class="px-4 py-3"><%= tx.notes || '-' %></td>
-                    </tr>
-                  <% }) %>
-                <% } %>
-              </tbody>
-            </table>
-          </div>
-        </section>
+              <% } else { %>
+                <% transactions.forEach((tx, idx) => { %>
+                  <tr>
+                    <td style="color:var(--muted-foreground); font-size:0.8rem"><%= (currentPage-1)*10+idx+1 %></td>
+                    <td style="font-size:0.85rem"><%= String(tx.transaction_date).substring(0,10) %></td>
+                    <td>
+                      <% if (tx.type === 'IN') { %>
+                        <span class="tx-badge tx-in">▲ IN</span>
+                      <% } else if (tx.type === 'OUT') { %>
+                        <span class="tx-badge tx-out">▼ OUT</span>
+                      <% } else { %>
+                        <span class="tx-badge tx-adj">⚖ OPNAME</span>
+                      <% } %>
+                    </td>
+                    <td style="text-align:center" class="<%= tx.quantity > 0 ? 'qty-positive' : 'qty-negative' %>">
+                      <%= tx.quantity > 0 ? '+' : '' %><%= tx.quantity %> <span style="font-weight:400; font-size:0.78rem; color:var(--muted-foreground)"><%= item.unit %></span>
+                    </td>
+                    <td style="font-family:monospace; font-size:0.78rem; color:var(--muted-foreground)"><%= tx.reference || '—' %></td>
+                    <td style="max-width:200px; font-size:0.85rem"><%= tx.notes || '—' %></td>
+                  </tr>
+                <% }) %>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
         <% if (totalPages > 1) { %>
-        <footer class="flex items-center justify-between px-4 py-3 border-t">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:0.75rem 1rem; border-top:1px solid var(--border);">
           <span class="text-sm text-muted-foreground">Total: <%= totalData %> transaksi</span>
           <div class="flex gap-1">
             <% for (let i = 1; i <= totalPages; i++) { %>
               <a href="/inventory/stock/<%= item.id %>/history?page=<%= i %>&type=<%= filterType %>&start=<%= filterStart %>&end=<%= filterEnd %>"
-                 class="btn-sm-<%= i===currentPage?'':'outline' %>"><%= i %></a>
+                 class="btn-sm<%= i===currentPage?'':'-outline' %>" style="min-width:2rem; text-align:center; padding:0.25rem 0.5rem; font-size:0.8rem"><%= i %></a>
             <% } %>
           </div>
-        </footer>
+        </div>
         <% } %>
       </div>
     </div>
   </main>
+
   <div id="toaster" class="toaster"></div>
   <script src="/assets/js/sidebar.js"></script>
 </body>
-</html> 
+</html>

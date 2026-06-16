@@ -7,6 +7,20 @@
   <meta name="description" content="Form tambah data barang baru ke inventaris logistik"/>
   <link rel="stylesheet" href="/assets/styles.css"/>
   <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+  <style>
+    .form-card { background: var(--card); border: 1px solid var(--border); border-radius: 0.75rem; overflow: hidden; }
+    .form-card-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); background: var(--muted); }
+    .form-card-header h2 { font-size: 0.95rem; font-weight: 700; margin: 0 0 0.2rem; }
+    .form-card-header p { font-size: 0.78rem; color: var(--muted-foreground); margin: 0; }
+    .form-card-body { padding: 1.5rem; }
+    .field-group { display: flex; flex-direction: column; gap: 0.4rem; }
+    .field-group label { font-size: 0.85rem; font-weight: 600; }
+    .field-hint { font-size: 0.72rem; color: var(--muted-foreground); margin-top: 0.15rem; }
+    .alert-error { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25); color: #dc2626; border-radius: 0.5rem; padding: 0.875rem 1rem; font-size: 0.875rem; }
+    .dark .alert-error { background: rgba(239,68,68,0.12); color: #f87171; }
+    .required-star { color: #ef4444; margin-left: 2px; }
+    .form-actions { display: flex; gap: 0.75rem; padding-top: 0.75rem; }
+  </style>
 </head>
 <body>
   <%- include('../sidebar', { activePage: 'items', user: user }) %>
@@ -17,62 +31,80 @@
         <button type="button" onclick="document.dispatchEvent(new CustomEvent('basecoat:sidebar'))" class="btn-sm-icon-ghost mr-2 size-7 -ml-1.5" aria-label="Toggle sidebar">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg>
         </button>
-        <span class="font-semibold text-sm flex-1">Tambah Barang Baru</span>
+        <!-- Breadcrumb -->
+        <div class="flex items-center gap-1.5 text-sm flex-1">
+          <a href="/inventory/items" class="text-muted-foreground hover:text-foreground transition-colors">Data Barang</a>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted-foreground"><path d="m9 18 6-6-6-6"/></svg>
+          <span class="font-semibold">Tambah Barang Baru</span>
+        </div>
         <a href="/inventory/items" class="btn-sm-outline" id="btn-kembali-create">← Kembali</a>
       </div>
     </header>
 
-    <div class="p-6 max-w-2xl">
+    <div class="p-6" style="max-width: 680px;">
       <% if (errors && errors.length > 0) { %>
-        <div class="rounded-md bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 px-4 py-3 mb-4 space-y-1">
-          <p class="text-sm font-medium text-red-800 dark:text-red-300">Mohon perbaiki kesalahan berikut:</p>
-          <ul class="list-disc list-inside text-sm text-red-700 dark:text-red-400">
+        <div class="alert-error mb-5">
+          <p style="font-weight:600; margin:0 0 0.4rem">Mohon perbaiki kesalahan berikut:</p>
+          <ul style="list-style:disc; padding-left:1.2rem; margin:0">
             <% errors.forEach(e => { %><li><%= e %></li><% }) %>
           </ul>
         </div>
       <% } %>
 
-      <div class="card">
-        <header class="px-4 py-3 border-b">
-          <h2 class="font-semibold text-sm">Data Barang</h2>
-        </header>
-        <section>
-          <form method="POST" action="/inventory/items/create" class="space-y-4" id="form-tambah-barang">
-            <div class="grid gap-1">
-              <label class="text-sm font-medium" for="nama-barang">Nama Barang <span class="text-red-500">*</span></label>
+      <div class="form-card">
+        <div class="form-card-header">
+          <h2>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline; vertical-align:-2px; margin-right:6px"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/></svg>
+            Data Barang Baru
+          </h2>
+          <p>Isi formulir di bawah untuk mendaftarkan barang baru ke sistem inventaris</p>
+        </div>
+        <div class="form-card-body">
+          <form method="POST" action="/inventory/items/create" class="space-y-5" id="form-tambah-barang">
+
+            <div class="field-group">
+              <label for="nama-barang">Nama Barang <span class="required-star">*</span></label>
               <input type="text" id="nama-barang" name="name" value="<%= old.name || '' %>"
-                     placeholder="cth: Tinta Printer" class="input" required/>
+                     placeholder="cth: Tinta Printer Canon" class="input" required/>
             </div>
-            <div class="grid gap-1">
-              <label class="text-sm font-medium" for="kode-barang">Kode Barang <span class="text-red-500">*</span></label>
+
+            <div class="field-group">
+              <label for="kode-barang">Kode Barang <span class="required-star">*</span></label>
               <input type="text" id="kode-barang" name="code" value="<%= old.code || '' %>"
-                     placeholder="cth: ITK-001" class="input" required/>
-              <p class="text-xs text-muted-foreground">Kode harus unik, tidak boleh sama dengan barang lain</p>
+                     placeholder="cth: ITK-001" class="input" required style="font-family:monospace; font-size:0.9rem"/>
+              <span class="field-hint">Kode harus unik dan tidak boleh sama dengan barang lain</span>
             </div>
+
             <div class="grid grid-cols-2 gap-4">
-              <div class="grid gap-1">
-                <label class="text-sm font-medium" for="satuan-barang">Satuan <span class="text-red-500">*</span></label>
+              <div class="field-group">
+                <label for="satuan-barang">Satuan <span class="required-star">*</span></label>
                 <input type="text" id="satuan-barang" name="unit" value="<%= old.unit || '' %>"
                        placeholder="cth: pcs, rim, lusin" class="input" required/>
               </div>
-              <div class="grid gap-1">
-                <label class="text-sm font-medium" for="stok-minimal">Stok Minimal <span class="text-red-500">*</span></label>
-                <input type="number" id="stok-minimal" name="minimal_quantity" value="<%= old.minimal_quantity !== undefined ? old.minimal_quantity : '' %>"
+              <div class="field-group">
+                <label for="stok-minimal">Stok Minimal <span class="required-star">*</span></label>
+                <input type="number" id="stok-minimal" name="minimal_quantity"
+                       value="<%= old.minimal_quantity !== undefined ? old.minimal_quantity : '' %>"
                        placeholder="cth: 5" min="0" class="input" required/>
-                <p class="text-xs text-muted-foreground">Peringatan diberikan jika stok di bawah nilai ini</p>
+                <span class="field-hint">Sistem akan memberi peringatan jika stok di bawah nilai ini</span>
               </div>
             </div>
-            <div class="grid gap-1">
-              <label class="text-sm font-medium" for="deskripsi-barang">Deskripsi</label>
+
+            <div class="field-group">
+              <label for="deskripsi-barang">Deskripsi <span style="font-size:0.75rem; color:var(--muted-foreground); font-weight:400">(opsional)</span></label>
               <textarea id="deskripsi-barang" name="description" rows="3"
-                        placeholder="Keterangan tambahan barang (opsional)" class="input"><%= old.description || '' %></textarea>
+                        placeholder="Keterangan tambahan tentang barang ini..." class="input"><%= old.description || '' %></textarea>
             </div>
-            <div class="flex gap-2 pt-2">
-              <button type="submit" class="btn-sm" id="btn-simpan-barang">Simpan Barang</button>
-              <a href="/inventory/items" class="btn-sm-outline" id="btn-batal-create">Batal</a>
+
+            <div class="form-actions">
+              <button type="submit" class="btn-sm" id="btn-simpan-barang" style="padding:0.5rem 1.5rem">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:5px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                Simpan Barang
+              </button>
+              <a href="/inventory/items" class="btn-sm-outline" id="btn-batal-create" style="padding:0.5rem 1.25rem">Batal</a>
             </div>
           </form>
-        </section>
+        </div>
       </div>
     </div>
   </main>

@@ -6,7 +6,25 @@
   <title>QR Code - <%= item.name %> - Facultyware</title>
   <meta name="description" content="QR Code untuk barang <%= item.name %> kode <%= item.code %>"/>
   <link rel="stylesheet" href="/assets/styles.css"/>
-  <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+  <style>
+    .qr-outer { max-width: 420px; margin: 0 auto; }
+    .qr-card { background: var(--card); border: 1px solid var(--border); border-radius: 1rem; overflow: hidden; }
+    .qr-card-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); background: var(--muted); text-align: center; }
+    .qr-card-header h2 { font-size: 1rem; font-weight: 700; margin: 0 0 0.3rem; }
+    .qr-card-header p { font-size: 0.78rem; color: var(--muted-foreground); margin: 0; }
+    .qr-image-area { padding: 2rem; display: flex; justify-content: center; background: #fff; }
+    .qr-image-area img { width: 200px; height: 200px; border-radius: 0.5rem; }
+    .qr-info { padding: 1.25rem 1.5rem; border-top: 1px solid var(--border); }
+    .qr-info-row { display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; font-size: 0.85rem; border-bottom: 1px solid var(--border); }
+    .qr-info-row:last-child { border-bottom: none; }
+    .qr-info-label { color: var(--muted-foreground); font-weight: 500; }
+    .qr-info-value { font-weight: 600; }
+    .qr-actions { padding: 1rem 1.5rem; border-top: 1px solid var(--border); display: flex; gap: 0.75rem; justify-content: center; }
+    .code-mono { font-family: monospace; font-size: 0.85rem; background: rgba(59,130,246,0.08); color: #3b82f6; padding: 0.2rem 0.5rem; border-radius: 0.35rem; }
+    .dark .code-mono { background: rgba(59,130,246,0.18); color: #60a5fa; }
+    .item-badge { display: inline-block; background: rgba(59,130,246,0.1); color: #3b82f6; font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 9999px; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 0.35rem; }
+    .dark .item-badge { background: rgba(59,130,246,0.2); color: #60a5fa; }
+  </style>
 </head>
 <body>
   <%- include('../sidebar', { activePage: 'items', user: user }) %>
@@ -17,34 +35,73 @@
         <button type="button" onclick="document.dispatchEvent(new CustomEvent('basecoat:sidebar'))" class="btn-sm-icon-ghost mr-2 size-7 -ml-1.5" aria-label="Toggle sidebar">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg>
         </button>
-        <span class="font-semibold text-sm flex-1">QR Code Barang</span>
+        <div class="flex items-center gap-1.5 text-sm flex-1">
+          <a href="/inventory/items" class="text-muted-foreground hover:text-foreground transition-colors">Data Barang</a>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted-foreground"><path d="m9 18 6-6-6-6"/></svg>
+          <span class="font-semibold">QR Code</span>
+        </div>
+        <a href="/inventory/items/<%= item.id %>/edit" class="btn-sm-outline" id="btn-edit-dari-qr" style="margin-right:4px">Edit</a>
         <a href="/inventory/items" class="btn-sm-outline" id="btn-kembali-qr">← Kembali</a>
       </div>
     </header>
 
-    <div class="p-6 max-w-md">
-      <div class="card text-center">
-        <header class="px-4 py-3 border-b">
-          <h2 class="font-semibold text-sm">QR Code: <%= item.name %></h2>
-          <p class="text-xs text-muted-foreground mt-0.5">Kode: <span class="font-mono"><%= item.code %></span></p>
-        </header>
-        <section class="space-y-4">
-          <div class="flex justify-center py-4" id="qr-container">
-            <img src="<%= qrImage %>" alt="QR Code <%= item.name %>" class="w-56 h-56 rounded-lg border p-2 bg-white" id="qr-image"/>
+    <div class="p-6">
+      <div class="qr-outer">
+        <!-- Item Label Badge -->
+        <div style="text-align:center; margin-bottom: 1rem;">
+          <span class="item-badge">QR Code Barang</span>
+          <h1 style="font-size:1.25rem; font-weight:700; margin:0"><%= item.name %></h1>
+          <p style="font-size:0.8rem; color:var(--muted-foreground); margin:0.25rem 0 0">Scan untuk mengidentifikasi barang ini</p>
+        </div>
+
+        <div class="qr-card">
+          <!-- QR Image - white bg so it looks correct on print -->
+          <div class="qr-image-area" id="qr-container">
+            <img src="<%= qrImage %>" alt="QR Code <%= item.name %>" id="qr-image"/>
           </div>
-          <div class="text-sm space-y-1 text-left bg-muted/30 rounded-md p-3">
-            <div class="flex justify-between"><span class="text-muted-foreground">Nama:</span><span class="font-medium"><%= item.name %></span></div>
-            <div class="flex justify-between"><span class="text-muted-foreground">Kode:</span><span class="font-mono text-xs"><%= item.code %></span></div>
-            <div class="flex justify-between"><span class="text-muted-foreground">Satuan:</span><span><%= item.unit %></span></div>
+
+          <!-- Item Info -->
+          <div class="qr-info">
+            <div class="qr-info-row">
+              <span class="qr-info-label">Nama Barang</span>
+              <span class="qr-info-value"><%= item.name %></span>
+            </div>
+            <div class="qr-info-row">
+              <span class="qr-info-label">Kode</span>
+              <span class="code-mono"><%= item.code %></span>
+            </div>
+            <div class="qr-info-row">
+              <span class="qr-info-label">Satuan</span>
+              <span class="qr-info-value"><%= item.unit %></span>
+            </div>
+            <div class="qr-info-row">
+              <span class="qr-info-label">Stok Saat Ini</span>
+              <span class="qr-info-value" style="color:<%= item.stock < item.minimal_quantity ? '#ef4444' : '#22c55e' %>"><%= item.stock %> <%= item.unit %></span>
+            </div>
             <% if (item.description) { %>
-              <div class="flex justify-between"><span class="text-muted-foreground">Deskripsi:</span><span class="text-right max-w-[60%]"><%= item.description %></span></div>
+            <div class="qr-info-row">
+              <span class="qr-info-label">Deskripsi</span>
+              <span class="qr-info-value" style="text-align:right; max-width:60%"><%= item.description %></span>
+            </div>
             <% } %>
           </div>
-          <div class="flex gap-2 justify-center pt-2">
-            <button onclick="printQR()" class="btn-sm" id="btn-print-qr">🖨 Cetak QR Code</button>
-            <a href="<%= qrImage %>" download="qr-<%= item.code %>.png" class="btn-sm-outline" id="btn-download-qr">⬇ Unduh</a>
+
+          <!-- Actions -->
+          <div class="qr-actions">
+            <button onclick="printQR()" class="btn-sm" id="btn-print-qr">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:5px"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+              Cetak QR
+            </button>
+            <a href="<%= qrImage %>" download="qr-<%= item.code %>.png" class="btn-sm-outline" id="btn-download-qr">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:5px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+              Unduh PNG
+            </a>
           </div>
-        </section>
+        </div>
+
+        <p style="text-align:center; font-size:0.72rem; color:var(--muted-foreground); margin-top:1rem">
+          QR Code ini berisi kode barang <strong><%= item.code %></strong> untuk identifikasi cepat
+        </p>
       </div>
     </div>
   </main>
@@ -53,14 +110,26 @@
   <script>
     function printQR() {
       const win = window.open('', '_blank');
-      win.document.write('<html><body style="text-align:center;font-family:sans-serif;padding:40px">');
-      win.document.write('<h2><%= item.name %></h2>');
-      win.document.write('<p>Kode: <strong><%= item.code %></strong></p>');
-      win.document.write('<img src="<%= qrImage %>" style="width:200px;height:200px"/>');
-      win.document.write('<p>Satuan: <%= item.unit %></p>');
-      win.document.write('</body></html>');
+      win.document.write(`
+        <html><head><title>QR Code - <%= item.name %></title>
+        <style>
+          body { font-family: sans-serif; text-align: center; padding: 40px; background: #fff; color: #000; }
+          h2 { font-size: 20px; margin-bottom: 8px; }
+          .code { font-family: monospace; font-size: 14px; color: #666; margin-bottom: 16px; }
+          img { width: 220px; height: 220px; margin: 10px auto; display: block; }
+          .info { font-size: 13px; margin-top: 12px; color: #444; }
+          .info strong { color: #000; }
+        </style></head><body>
+        <h2><%= item.name %></h2>
+        <p class="code">Kode: <strong><%= item.code %></strong></p>
+        <img src="<%= qrImage %>" alt="QR Code"/>
+        <div class="info">Satuan: <strong><%= item.unit %></strong></div>
+        <% if (item.description) { %><div class="info" style="margin-top:4px"><%= item.description %></div><% } %>
+        <div class="info" style="margin-top:16px; font-size:11px; color:#aaa">Dicetak dari Facultyware &mdash; Logistik & Inventori FTI UNAND</div>
+        </body></html>
+      `);
       win.document.close();
-      win.print();
+      setTimeout(() => win.print(), 300);
     }
   </script>
 </body>

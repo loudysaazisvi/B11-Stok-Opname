@@ -7,6 +7,81 @@
   <meta name="description" content="Kelola master data barang inventaris logistik fakultas"/>
   <link rel="stylesheet" href="/assets/styles.css"/>
   <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+  <style>
+    /* Premium stat cards */
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      transition: box-shadow 0.2s ease, transform 0.2s ease;
+    }
+    .stat-card:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 25px -5px rgba(0,0,0,0.12), 0 4px 6px -2px rgba(0,0,0,0.05);
+    }
+    .stat-icon {
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 0.6rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .stat-icon.blue   { background: rgba(59,130,246,0.12); color: #3b82f6; }
+    .stat-icon.green  { background: rgba(34,197,94,0.12);  color: #22c55e; }
+    .stat-icon.red    { background: rgba(239,68,68,0.12);  color: #ef4444; }
+    .stat-icon.amber  { background: rgba(245,158,11,0.12); color: #f59e0b; }
+    .stat-value { font-size: 1.6rem; font-weight: 700; line-height: 1; }
+    .stat-label { font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.2rem; }
+    /* Page-level action strip */
+    .page-action-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    /* Table polish */
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    .data-table thead th {
+      padding: 0.75rem 1rem;
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted-foreground);
+      background: var(--muted);
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      white-space: nowrap;
+    }
+    .data-table tbody td {
+      padding: 0.875rem 1rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .data-table tbody tr:last-child td { border-bottom: none; }
+    .data-table tbody tr { transition: background-color 0.15s ease; }
+    .data-table tbody tr:hover { background-color: rgba(59,130,246,0.03); }
+    .dark .data-table tbody tr:hover { background-color: rgba(255,255,255,0.02); }
+    /* Badges */
+    .badge { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; }
+    .badge-danger  { background: rgba(239,68,68,0.12);   color: #dc2626; }
+    .badge-success { background: rgba(34,197,94,0.12);   color: #16a34a; }
+    .dark .badge-danger  { background: rgba(239,68,68,0.2);  color: #f87171; }
+    .dark .badge-success { background: rgba(34,197,94,0.2);  color: #4ade80; }
+    .code-chip { font-family: monospace; font-size: 0.72rem; background: var(--muted); color: var(--muted-foreground); padding: 0.15rem 0.4rem; border-radius: 0.3rem; border: 1px solid var(--border); }
+    /* Alert box */
+    .alert-success { background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.25); color: #15803d; border-radius: 0.5rem; padding: 0.75rem 1rem; font-size: 0.875rem; }
+    .alert-error   { background: rgba(239,68,68,0.08);  border: 1px solid rgba(239,68,68,0.25);  color: #dc2626; border-radius: 0.5rem; padding: 0.75rem 1rem; font-size: 0.875rem; }
+    .dark .alert-success { background: rgba(34,197,94,0.12); color: #4ade80; }
+    .dark .alert-error   { background: rgba(239,68,68,0.12);  color: #f87171; }
+  </style>
 </head>
 <body>
   <%- include('../sidebar', { activePage: 'items', user: user }) %>
@@ -17,16 +92,62 @@
         <button type="button" onclick="document.dispatchEvent(new CustomEvent('basecoat:sidebar'))" class="btn-sm-icon-ghost mr-2 size-7 -ml-1.5" aria-label="Toggle sidebar">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg>
         </button>
-        <span class="font-semibold text-sm flex-1">Master Data Barang</span>
-        <a href="/inventory/items/create" class="btn-sm" id="btn-tambah-barang">+ Tambah Barang</a>
+        <div class="flex-1">
+          <span class="font-semibold text-sm">Master Data Barang</span>
+          <span class="text-xs text-muted-foreground ml-2">Kelola inventaris barang fakultas</span>
+        </div>
+        <a href="/inventory/items/create" class="btn-sm" id="btn-tambah-barang">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+          Tambah Barang
+        </a>
       </div>
     </header>
 
-    <div class="p-6 space-y-4">
-      <% if (success) { %><div class="rounded-md bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 px-4 py-3 text-green-800 dark:text-green-300 text-sm"><%= success %></div><% } %>
-      <% if (error) { %><div class="rounded-md bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 px-4 py-3 text-red-800 dark:text-red-300 text-sm"><%= error %></div><% } %>
+    <div class="p-6 space-y-5">
+      <% if (success) { %><div class="alert-success"><%= success %></div><% } %>
+      <% if (error) { %><div class="alert-error"><%= error %></div><% } %>
 
-      <%# Filter & Pencarian %>
+      <%# Stat Summary Cards %>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="stat-card">
+          <div class="stat-icon blue">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+          </div>
+          <div>
+            <div class="stat-value"><%= totalData %></div>
+            <div class="stat-label">Total Barang</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <div>
+            <div class="stat-value" style="color:#22c55e"><%= items.filter(i => i.stock >= i.minimal_quantity).length %></div>
+            <div class="stat-label">Stok Normal</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon red">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+          </div>
+          <div>
+            <div class="stat-value" style="color:#ef4444"><%= items.filter(i => i.stock < i.minimal_quantity && i.minimal_quantity > 0).length %></div>
+            <div class="stat-label">Stok Rendah</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon amber">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+          </div>
+          <div>
+            <div class="stat-value" style="color:#f59e0b"><%= showInactive ? 'Nonaktif' : 'Aktif' %></div>
+            <div class="stat-label">Status Filter</div>
+          </div>
+        </div>
+      </div>
+
+      <%# Filter & Search %>
       <div class="card">
         <section>
           <form method="GET" action="/inventory/items" class="flex gap-3 flex-wrap items-end" id="form-filter-barang">
@@ -41,19 +162,28 @@
                 <option value="nonaktif" <%= showInactive ? 'selected' : '' %>>Barang Nonaktif</option>
               </select>
             </div>
-            <button type="submit" class="btn-sm" id="btn-cari-barang">Tampilkan</button>
-            <% if (search || showInactive) { %><a href="/inventory/items" class="btn-sm-outline" id="btn-reset-filter">Reset</a><% } %>
+            <div class="flex gap-2 items-end">
+              <button type="submit" class="btn-sm" id="btn-cari-barang">Tampilkan</button>
+              <% if (search || showInactive) { %><a href="/inventory/items" class="btn-sm-outline" id="btn-reset-filter">Reset</a><% } %>
+            </div>
           </form>
         </section>
       </div>
 
-      <%# Toolbar Ekspor & Impor %>
-      <div class="flex gap-2 flex-wrap items-center justify-between">
-        <span class="text-sm text-muted-foreground">Total: <strong><%= totalData %></strong> barang <%= showInactive ? '(nonaktif)' : '(aktif)' %></span>
-        <div class="flex gap-2">
-          <a href="/inventory/items/export" class="btn-sm-outline" id="btn-ekspor-barang">⬇ Ekspor Excel</a>
+      <%# Toolbar Export/Import & Count %>
+      <div class="page-action-bar">
+        <span class="text-sm text-muted-foreground">
+          Menampilkan <strong><%= items.length %></strong> dari <strong><%= totalData %></strong> barang
+          <% if (showInactive) { %><span style="color:#f59e0b"> (nonaktif)</span><% } %>
+        </span>
+        <div class="flex gap-2 flex-wrap">
+          <a href="/inventory/items/export" class="btn-sm-outline" id="btn-ekspor-barang">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            Ekspor Excel
+          </a>
           <label class="btn-sm-outline cursor-pointer" id="label-impor-barang">
-            ⬆ Impor Excel
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+            Impor Excel
             <form method="POST" action="/inventory/items/import" enctype="multipart/form-data" id="form-impor-barang">
               <input type="file" name="file" accept=".xlsx,.xls" class="hidden" onchange="this.form.submit()"/>
             </form>
@@ -62,78 +192,87 @@
       </div>
 
       <%# Tabel Data Barang %>
-      <div class="card">
-        <section class="p-0">
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm" id="tabel-barang">
-              <thead class="border-b bg-muted/40">
-                <tr class="text-left">
-                  <th class="px-4 py-3 font-medium">No</th>
-                  <th class="px-4 py-3 font-medium">Kode</th>
-                  <th class="px-4 py-3 font-medium">Nama Barang</th>
-                  <th class="px-4 py-3 font-medium">Satuan</th>
-                  <th class="px-4 py-3 font-medium">Stok Minimal</th>
-                  <th class="px-4 py-3 font-medium">Stok Saat Ini</th>
-                  <th class="px-4 py-3 font-medium">Status Stok</th>
-                  <th class="px-4 py-3 font-medium">Aksi</th>
+      <div class="card" style="padding:0; overflow:hidden;">
+        <div class="overflow-x-auto">
+          <table class="data-table" id="tabel-barang">
+            <thead>
+              <tr>
+                <th style="width:40px">No</th>
+                <th>Kode</th>
+                <th>Nama Barang</th>
+                <th>Satuan</th>
+                <th style="text-align:center">Stok Min.</th>
+                <th style="text-align:center">Stok Saat Ini</th>
+                <th style="text-align:center">Status Stok</th>
+                <th style="text-align:center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (items.length === 0) { %>
+                <tr>
+                  <td colspan="8" style="padding:3rem 1rem; text-align:center; color:var(--muted-foreground)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 0.75rem; opacity:0.3; display:block"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/></svg>
+                    Tidak ada data barang
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                <% if (items.length === 0) { %>
-                  <tr><td colspan="8" class="px-4 py-10 text-center text-muted-foreground">Tidak ada data barang</td></tr>
-                <% } else { %>
-                  <% items.forEach((item, idx) => { %>
-                    <tr class="border-b hover:bg-muted/30 transition-colors">
-                      <td class="px-4 py-3 text-muted-foreground"><%= (currentPage-1)*10+idx+1 %></td>
-                      <td class="px-4 py-3 font-mono text-xs bg-muted/30 rounded"><%= item.code %></td>
-                      <td class="px-4 py-3 font-medium"><%= item.name %></td>
-                      <td class="px-4 py-3"><%= item.unit %></td>
-                      <td class="px-4 py-3"><%= item.minimal_quantity %></td>
-                      <td class="px-4 py-3">
-                        <span class="<%= item.stock < item.minimal_quantity ? 'text-red-600 dark:text-red-400 font-bold' : 'text-green-700 dark:text-green-400 font-semibold' %>">
-                          <%= item.stock %>
-                        </span>
-                      </td>
-                      <td class="px-4 py-3">
-                        <% if (item.stock < item.minimal_quantity && item.minimal_quantity > 0) { %>
-                          <span class="bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 text-xs px-2 py-0.5 rounded-full">Stok Rendah</span>
+              <% } else { %>
+                <% items.forEach((item, idx) => { %>
+                  <tr>
+                    <td style="color:var(--muted-foreground); font-size:0.8rem"><%= (currentPage-1)*10+idx+1 %></td>
+                    <td><span class="code-chip"><%= item.code %></span></td>
+                    <td>
+                      <span style="font-weight:500"><%= item.name %></span>
+                      <% if (item.description) { %>
+                        <div style="font-size:0.72rem; color:var(--muted-foreground); margin-top:1px"><%= item.description.substring(0, 40) %><%= item.description.length > 40 ? '…' : '' %></div>
+                      <% } %>
+                    </td>
+                    <td style="color:var(--muted-foreground)"><%= item.unit %></td>
+                    <td style="text-align:center"><%= item.minimal_quantity %></td>
+                    <td style="text-align:center">
+                      <span style="font-weight:700; font-size:1rem; color:<%= item.stock < item.minimal_quantity ? '#ef4444' : '#22c55e' %>">
+                        <%= item.stock %>
+                      </span>
+                    </td>
+                    <td style="text-align:center">
+                      <% if (item.stock < item.minimal_quantity && item.minimal_quantity > 0) { %>
+                        <span class="badge badge-danger">⚠ Stok Rendah</span>
+                      <% } else { %>
+                        <span class="badge badge-success">✓ Normal</span>
+                      <% } %>
+                    </td>
+                    <td style="text-align:center">
+                      <div class="flex gap-1 justify-center flex-wrap">
+                        <a href="/inventory/items/<%= item.id %>/edit" class="btn-sm-outline" id="btn-edit-<%= item.id %>" style="font-size:0.75rem; padding:0.25rem 0.6rem">Edit</a>
+                        <a href="/inventory/items/<%= item.id %>/qrcode" class="btn-sm-outline" id="btn-qr-<%= item.id %>" style="font-size:0.75rem; padding:0.25rem 0.6rem">QR</a>
+                        <% if (!showInactive) { %>
+                          <form method="POST" action="/inventory/items/<%= item.id %>/deactivate" style="display:inline" id="form-nonaktif-<%= item.id %>">
+                            <button type="submit" class="btn-sm-outline" onclick="return confirm('Nonaktifkan barang ini?')" id="btn-nonaktif-<%= item.id %>" style="font-size:0.75rem; padding:0.25rem 0.6rem; color:#f97316; border-color:rgba(249,115,22,0.3)">Nonaktif</button>
+                          </form>
                         <% } else { %>
-                          <span class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 text-xs px-2 py-0.5 rounded-full">Normal</span>
+                          <form method="POST" action="/inventory/items/<%= item.id %>/activate" style="display:inline" id="form-aktifkan-<%= item.id %>">
+                            <button type="submit" class="btn-sm" id="btn-aktifkan-<%= item.id %>" style="font-size:0.75rem; padding:0.25rem 0.6rem">Aktifkan</button>
+                          </form>
                         <% } %>
-                      </td>
-                      <td class="px-4 py-3">
-                        <div class="flex gap-1 flex-wrap">
-                          <a href="/inventory/items/<%= item.id %>/edit" class="btn-sm-outline" id="btn-edit-<%= item.id %>">Edit</a>
-                          <a href="/inventory/items/<%= item.id %>/qrcode" class="btn-sm-outline" id="btn-qr-<%= item.id %>">QR</a>
-                          <% if (!showInactive) { %>
-                            <form method="POST" action="/inventory/items/<%= item.id %>/deactivate" style="display:inline" id="form-nonaktif-<%= item.id %>">
-                              <button type="submit" class="btn-sm-outline text-orange-600" onclick="return confirm('Nonaktifkan barang ini?')" id="btn-nonaktif-<%= item.id %>">Nonaktifkan</button>
-                            </form>
-                          <% } else { %>
-                            <form method="POST" action="/inventory/items/<%= item.id %>/activate" style="display:inline" id="form-aktifkan-<%= item.id %>">
-                              <button type="submit" class="btn-sm" id="btn-aktifkan-<%= item.id %>">Aktifkan</button>
-                            </form>
-                          <% } %>
-                        </div>
-                      </td>
-                    </tr>
-                  <% }) %>
-                <% } %>
-              </tbody>
-            </table>
-          </div>
-        </section>
+                      </div>
+                    </td>
+                  </tr>
+                <% }) %>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
 
         <% if (totalPages > 1) { %>
-        <footer class="flex items-center justify-between px-4 py-3 border-t">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:0.75rem 1rem; border-top:1px solid var(--border);">
           <span class="text-sm text-muted-foreground">Halaman <%= currentPage %> dari <%= totalPages %></span>
           <div class="flex gap-1">
             <% for (let i = 1; i <= totalPages; i++) { %>
               <a href="/inventory/items?page=<%= i %>&search=<%= search %>&status=<%= showInactive ? 'nonaktif' : '' %>"
-                 class="btn-sm<%= i===currentPage ? '' : '-outline' %>" id="btn-page-<%= i %>"><%= i %></a>
+                 class="btn-sm<%= i===currentPage ? '' : '-outline' %>" id="btn-page-<%= i %>"
+                 style="min-width:2rem; text-align:center; padding:0.25rem 0.5rem; font-size:0.8rem"><%= i %></a>
             <% } %>
           </div>
-        </footer>
+        </div>
         <% } %>
       </div>
     </div>
