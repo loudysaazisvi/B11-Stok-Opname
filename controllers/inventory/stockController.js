@@ -1,5 +1,19 @@
 const db = require('../../lib/db');
 
+// Validasi adjustment
+function validateAdjustment(body) {
+  const errors = [];
+  if (body.quantity === undefined || body.quantity === '')
+    errors.push('Jumlah fisik stok wajib diisi');
+  else if (!Number.isInteger(Number(body.quantity)) || Number(body.quantity) < 0)
+    errors.push('Jumlah stok harus berupa angka bulat non-negatif');
+  if (!body.notes || body.notes.trim() === '')
+    errors.push('Alasan perubahan wajib diisi');
+  if (body.reference && body.reference.length > 255)
+    errors.push('Nomor referensi maksimal 255 karakter');
+  return errors;
+}
+
 // Fitur 1 - daftar stok terkini
 const index = async (req, res, next) => {
   try {
@@ -91,4 +105,66 @@ const history = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { index, history };
+// Fitur 3 - form adjustment
+const adjustmentForm = async (req, res, next) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT i.*, COALESCE(inv.quantity, 0) as stock
+       FROM items i LEFT JOIN inventories inv ON i.id = inv.item_id WHERE i.id = ?`,
+      [req.params.id]
+    );
+    if (rows.length === 0) return res.redirect('/inventory/stock?error=Barang tidak ditemukan');
+    res.render('inventory/stock/adjustment', {
+      title: 'Update Stok Opname',
+      user: req.session.username,
+      item: rows[0],
+      errors: [],
+      old: {}
+    });
+  } catch (err) { next(err); }
+};
+
+// Fitur 3 - proses adjustment
+const adjustment = async (req, res, next) => {
+  const errors = validateAdjustment(req.body);
+  if (errors.length > 0) {
+    const [rows] = await db.query(
+      `SELECT i.*, COALESCE(inv.quantity, 0) as stock
+       FROM items i LEFT JOIN inventories inv ON i.id = inv.item_id WHERE i.id = ?`,
+      [req.params.id]
+    );
+    return res.render('inventory/stock/adjustment', {
+      title: 'Update Stok Opname',
+      user: req.session.username,
+      item: rows[0],
+      errors,
+      old: req.body
+    });
+  }
+  try {
+    const { quantity, notes, reference } = req.body;
+    const newQty = Number(quantity);
+    const [[currentRow]] = await db.query(
+      'SELECT COALESCE(quantity, 0) as qty FROM inventories WHERE item_id = ?', [req.params.id]
+    );
+    const currentQty = currentRow ? currentRow.qty : 0;
+    const selisih = newQty - currentQty;
+
+    await db.query(
+      `INSERT INTO inventory_transactions (item_id, type, quantity, transaction_date, reference, notes, created_at, updated_at)
+       VALUES (?, 'ADJUSTMENT', ?, CURDATE(), ?, ?, NOW(), NOW())`,
+      [req.params.id, selisih, reference || null, notes.trim()]
+    );
+
+    const [invExist] = await db.query('SELECT id FROM inventories WHERE item_id = ?', [req.params.id]);
+    if (invExist.length > 0) {
+      await db.query('UPDATE inventories SET quantity = ?, updated_at = NOW() WHERE item_id = ?', [newQty, req.params.id]);
+    } else {
+      await db.query('INSERT INTO inventories (item_id, quantity, created_at, updated_at) VALUES (?, ?, NOW(), NOW())', [req.params.id, newQty]);
+    }
+
+    res.redirect(`/inventory/stock/${req.params.id}/history?success=Stok berhasil diperbarui`);
+  } catch (err) { next(err); }
+};
+
+module.exports = { index, history, adjustmentForm, adjustment };
