@@ -196,32 +196,41 @@
   }
 
   .custom-sidebar .btn-logout {
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: #f87171;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #b91c1c;
+    background-color: #fee2e2;
     text-decoration: none;
-    padding: 0.25rem 0.5rem;
+    padding: 0.25rem 0.60rem;
     border-radius: 0.25rem;
     transition: all 0.2s;
-    border: 1px solid rgba(248, 113, 113, 0.15);
+    border: 1px solid rgba(185, 28, 28, 0.35);
   }
 
   .custom-sidebar .btn-logout:hover {
-    background-color: rgba(248, 113, 113, 0.1);
-    color: #ef4444;
-    border-color: rgba(239, 68, 68, 0.3);
+    background-color: #fca5a5;
+    color: #7f1d1d;
+    border-color: rgba(127, 29, 29, 0.5);
   }
 
   /* Layout Offset for Desktop */
   @media (min-width: 1024px) {
     .custom-sidebar {
-      transform: translateX(0) !important;
+      transform: translateX(0);
+      transition: transform 0.25s ease-in-out;
     }
     #content {
-      margin-left: 260px !important;
+      margin-left: 260px;
+      transition: margin-left 0.25s ease-in-out;
     }
     .sidebar {
       display: none !important; /* Hide original basecoat sidebar */
+    }
+    html.sidebar-collapsed .custom-sidebar {
+      transform: translateX(-100%);
+    }
+    html.sidebar-collapsed #content {
+      margin-left: 0;
     }
   }
 
@@ -301,6 +310,16 @@
   }
 </style>
 
+<script>
+  // Instant restoration of sidebar collapsed state to prevent layout flash
+  try {
+    const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+    if (isCollapsed && window.innerWidth >= 1024) {
+      document.documentElement.classList.add('sidebar-collapsed');
+    }
+  } catch(_) {}
+</script>
+
 <aside class="custom-sidebar">
   <header>
     <a href="/inventory/items" class="brand-title">
@@ -371,7 +390,7 @@
   <footer>
     <div class="user-info">
       <div class="user-details">
-        <span class="user-name"><%= typeof user !== 'undefined' ? user : 'Admin' %></span>
+        <span class="user-name"><%= (typeof user !== 'undefined' ? user : 'Admin').toUpperCase() %></span>
         <span class="user-role">Logistik Officer</span>
       </div>
       <a href="/logout" class="btn-logout">Keluar</a>
@@ -380,12 +399,19 @@
 </aside>
 
 <script>
-  // Handle mobile sidebar toggle event
+  // Handle mobile and desktop sidebar toggle events
   document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('basecoat:sidebar', () => {
-      const sidebar = document.querySelector('.custom-sidebar');
-      if (sidebar) {
-        sidebar.classList.toggle('open');
+      if (window.innerWidth >= 1024) {
+        // Desktop Collapse Toggle
+        const collapsed = document.documentElement.classList.toggle('sidebar-collapsed');
+        localStorage.setItem('sidebarCollapsed', collapsed);
+      } else {
+        // Mobile Slider Toggle
+        const sidebar = document.querySelector('.custom-sidebar');
+        if (sidebar) {
+          sidebar.classList.toggle('open');
+        }
       }
     });
 

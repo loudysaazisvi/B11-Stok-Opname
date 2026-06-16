@@ -7,6 +7,9 @@ const notFoundHandler = (req, res, next) => {
 
 // error handler
 const errorHandler = (err, req, res, next) => {
+  // log error to console
+  console.error('SERVER ERROR:', err);
+
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
