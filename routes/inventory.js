@@ -17,6 +17,7 @@ router.post('/items/create', isAuthenticated, canManage, itemsController.store);
 // Fitur 5 - ekspor & impor massal (statis, harus di atas /items/:id)
 router.get('/items/export', isAuthenticated, canManage, itemsController.exportItems);
 router.post('/items/import', isAuthenticated, canManage, itemsController.importItems);
+router.get('/items/template', isAuthenticated, canManage, itemsController.downloadTemplate);
 // REST API Dinda (statis, harus di atas /items/:id)
 router.get('/api/items', isAuthenticated, canManage, itemsController.apiList);
 // Rute DINAMIS dengan :id

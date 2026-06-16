@@ -223,29 +223,87 @@ const importItems = [
       const workbook = new ExcelJS.Workbook();
       await workbook.xlsx.load(req.file.buffer);
       const sheet = workbook.worksheets[0];
-      const rows = [];
+      
+      // Deteksi Header Dinamis
+      const headerRow = sheet.getRow(1);
+      let colIndices = {
+        code: -1,
+        name: -1,
+        unit: -1,
+        minimal_quantity: -1,
+        description: -1
+      };
+
+      headerRow.eachCell((cell, colNumber) => {
+        const text = String(cell.value || '').toLowerCase().trim();
+        if (text.includes('kode')) colIndices.code = colNumber;
+        else if (text.includes('nama')) colIndices.name = colNumber;
+        else if (text.includes('satuan') || text.includes('unit')) colIndices.unit = colNumber;
+        else if (text.includes('min') || text.includes('minimal')) colIndices.minimal_quantity = colNumber;
+        else if (text.includes('deskripsi') || text.includes('keterangan') || text.includes('description')) colIndices.description = colNumber;
+      });
+
+      // Validasi kolom wajib minimal harus ada kode dan nama barang
+      if (colIndices.code === -1 || colIndices.name === -1) {
+        return res.redirect('/inventory/items?error=Format Excel tidak valid. Kolom Kode Barang dan Nama Barang wajib ada.');
+      }
+
+      const rowsToProcess = [];
       sheet.eachRow((row, rowNumber) => {
         if (rowNumber === 1) return; // skip header
-        rows.push(row.values);
+        
+        // Ambil value berdasarkan indeks dinamis
+        const code = colIndices.code !== -1 ? row.getCell(colIndices.code).value : null;
+        const name = colIndices.name !== -1 ? row.getCell(colIndices.name).value : null;
+        const unit = colIndices.unit !== -1 ? row.getCell(colIndices.unit).value : 'pcs';
+        const minimal_quantity = colIndices.minimal_quantity !== -1 ? row.getCell(colIndices.minimal_quantity).value : 0;
+        const description = colIndices.description !== -1 ? row.getCell(colIndices.description).value : '';
+
+        // Kumpulkan baris yang valid (kode & nama terisi)
+        if (code && name) {
+          rowsToProcess.push({
+            code: String(code).trim(),
+            name: String(name).trim(),
+            unit: String(unit).trim(),
+            minimal_quantity: isNaN(Number(minimal_quantity)) ? 0 : Number(minimal_quantity),
+            description: description ? String(description).trim() : ''
+          });
+        }
       });
+
       let imported = 0;
       let skipped = 0;
-      for (const values of rows) {
-        const [, code, name, unit, minimal_quantity, , description] = values;
-        if (!code || !name) { skipped++; continue; }
-        const [exist] = await db.query('SELECT id FROM items WHERE code = ?', [String(code).trim()]);
-        if (exist.length > 0) { skipped++; continue; }
-        const [result] = await db.query(
-          `INSERT INTO items (name, code, unit, minimal_quantity, description, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, NOW(), NOW())`,
-          [String(name).trim(), String(code).trim(), unit || 'pcs', Number(minimal_quantity) || 0, description || '']
-        );
-        await db.query(
-          `INSERT INTO inventories (item_id, quantity, created_at, updated_at) VALUES (?, 0, NOW(), NOW())`,
-          [result.insertId]
-        );
-        imported++;
+
+      // Proses Asinkron yang Benar
+      for (const rowData of rowsToProcess) {
+        try {
+          // Cek duplikat kode
+          const [exist] = await db.query('SELECT id FROM items WHERE code = ?', [rowData.code]);
+          if (exist.length > 0) {
+            skipped++;
+            continue;
+          }
+
+          // Insert ke tabel items
+          const [result] = await db.query(
+            `INSERT INTO items (name, code, unit, minimal_quantity, description, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, NOW(), NOW())`,
+            [rowData.name, rowData.code, rowData.unit, rowData.minimal_quantity, rowData.description]
+          );
+
+          // Inisialisasi stok 0 di tabel inventories
+          await db.query(
+            `INSERT INTO inventories (item_id, quantity, created_at, updated_at)
+             VALUES (?, 0, NOW(), NOW())`,
+            [result.insertId]
+          );
+
+          imported++;
+        } catch (err) {
+          skipped++;
+        }
       }
+
       res.redirect(`/inventory/items?success=${imported} barang berhasil diimpor, ${skipped} dilewati`);
     } catch (err) { next(err); }
   }
@@ -254,7 +312,13 @@ const importItems = [
 // ─── Fitur 6: QR Code per Barang ──────────────────────────────
 const qrcode = async (req, res, next) => {
   try {
-    const [rows] = await db.query('SELECT * FROM items WHERE id = ?', [req.params.id]);
+    const [rows] = await db.query(
+      `SELECT i.*, COALESCE(inv.quantity, 0) as stock
+       FROM items i
+       LEFT JOIN inventories inv ON i.id = inv.item_id
+       WHERE i.id = ?`,
+      [req.params.id]
+    );
     if (rows.length === 0) return res.redirect('/inventory/items?error=Barang tidak ditemukan');
     const item = rows[0];
     const qrData = JSON.stringify({ id: item.id, code: item.code, name: item.name });
@@ -294,8 +358,50 @@ const apiList = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+// ─── Fitur 2b: Unduh Template Impor Excel ─────────────────────
+const downloadTemplate = async (req, res, next) => {
+  try {
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('Template Impor Barang');
+    
+    sheet.columns = [
+      { header: 'Kode Barang', key: 'code', width: 20 },
+      { header: 'Nama Barang', key: 'name', width: 35 },
+      { header: 'Satuan', key: 'unit', width: 15 },
+      { header: 'Stok Minimal', key: 'minimal_quantity', width: 15 },
+      { header: 'Deskripsi', key: 'description', width: 40 }
+    ];
+
+    // Format headers
+    const headerRow = sheet.getRow(1);
+    headerRow.font = { bold: true };
+    headerRow.height = 20;
+
+    // Add dummy/example data
+    sheet.addRow({
+      code: 'BRG-001',
+      name: 'Kertas HVS A4 80gr',
+      unit: 'rim',
+      minimal_quantity: 10,
+      description: 'Kertas HVS merek SIDU untuk cetak dokumen'
+    });
+    sheet.addRow({
+      code: 'BRG-002',
+      name: 'Spidol Boardmarker Hitam',
+      unit: 'pcs',
+      minimal_quantity: 5,
+      description: 'Spidol Snowman warna hitam untuk papan tulis'
+    });
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename="template-impor-barang.xlsx"');
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (err) { next(err); }
+};
+
 module.exports = {
   index, createForm, store, editForm, update,
   deactivate, activate, exportItems, importItems,
-  qrcode, apiList
+  qrcode, apiList, downloadTemplate
 };
