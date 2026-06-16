@@ -24,11 +24,13 @@
     .data-table tbody tr { transition:background-color 0.15s; }
     .data-table tbody tr:hover { background:rgba(59,130,246,.03); }
     .dark .data-table tbody tr:hover { background:rgba(255,255,255,.02); }
-    .badge { display:inline-flex; align-items:center; padding:0.2rem 0.6rem; border-radius:9999px; font-size:0.7rem; font-weight:600; }
-    .badge-danger  { background:rgba(239,68,68,.12);  color:#dc2626; }
+    .badge { display:inline-flex; align-items:center; padding:0.18rem 0.55rem; border-radius:9999px; font-size:0.7rem; font-weight:600; white-space:nowrap; }
     .badge-success { background:rgba(34,197,94,.12);  color:#16a34a; }
-    .dark .badge-danger  { background:rgba(239,68,68,.2);  color:#f87171; }
+    .badge-warning { background:rgba(234,179,8,.12);  color:#b45309; }
+    .badge-danger  { background:rgba(239,68,68,.12);  color:#dc2626; }
     .dark .badge-success { background:rgba(34,197,94,.2);  color:#4ade80; }
+    .dark .badge-warning { background:rgba(234,179,8,.2);  color:#fbbf24; }
+    .dark .badge-danger  { background:rgba(239,68,68,.2);  color:#f87171; }
     .code-chip { font-family:monospace; font-size:0.72rem; background:var(--muted); color:var(--muted-foreground); padding:0.15rem 0.4rem; border-radius:0.3rem; border:1px solid var(--border); }
     .alert-success { background:rgba(34,197,94,.08); border:1px solid rgba(34,197,94,.25); color:#15803d; border-radius:0.5rem; padding:0.75rem 1rem; font-size:0.875rem; }
     .alert-error   { background:rgba(239,68,68,.08);  border:1px solid rgba(239,68,68,.25);  color:#dc2626; border-radius:0.5rem; padding:0.75rem 1rem; font-size:0.875rem; }
@@ -129,14 +131,14 @@
           <table class="data-table">
             <thead>
               <tr>
-                <th style="width:40px">No</th>
-                <th>Kode</th>
-                <th>Nama Barang</th>
-                <th>Satuan</th>
-                <th style="text-align:center">Stok Min.</th>
-                <th style="text-align:center">Stok Saat Ini</th>
-                <th style="text-align:center">Status</th>
-                <th style="text-align:center">Aksi</th>
+                <th style="width:40px; font-weight:700">No</th>
+                <th style="font-weight:700">Kode</th>
+                <th style="font-weight:700">Nama Barang</th>
+                <th style="font-weight:700">Satuan</th>
+                <th style="text-align:center; font-weight:700">Stok Min.</th>
+                <th style="text-align:center; font-weight:700">Stok Saat Ini</th>
+                <th style="text-align:center; font-weight:700">Status</th>
+                <th style="text-align:center; font-weight:700">Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -156,17 +158,17 @@
                     <td style="color:var(--muted-foreground)"><%= item.unit %></td>
                     <td style="text-align:center"><%= item.minimal_quantity %></td>
                     <td style="text-align:center">
-                      <span style="font-weight:700; font-size:1.05rem; color:<%= item.stock < item.minimal_quantity ? '#ef4444' : item.stock === 0 ? '#f59e0b' : '#22c55e' %>">
+                      <span style="font-weight:700; font-size:0.95rem; color:<%= item.stock === 0 ? '#dc2626' : item.stock < item.minimal_quantity ? '#b45309' : '#16a34a' %>">
                         <%= item.stock %>
                       </span>
                     </td>
                     <td style="text-align:center">
                       <% if (item.stock === 0) { %>
-                        <span class="badge" style="background:rgba(245,158,11,.12); color:#b45309;">◉ Habis</span>
+                        <span class="badge badge-danger">Habis</span>
                       <% } else if (item.stock < item.minimal_quantity) { %>
-                        <span class="badge badge-danger">⚠ Rendah</span>
+                        <span class="badge badge-warning">Rendah</span>
                       <% } else { %>
-                        <span class="badge badge-success">✓ Normal</span>
+                        <span class="badge badge-success">Normal</span>
                       <% } %>
                     </td>
                     <td style="text-align:center">

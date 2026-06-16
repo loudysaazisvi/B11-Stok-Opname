@@ -201,6 +201,22 @@ const report = async (req, res, next) => {
           [start, end, limit, offset]
         );
         data = rows;
+
+        // Tulis log ke riwayat laporan jika ada data dan di halaman pertama
+        if (data.length > 0 && page === 1) {
+          const refPeriod = `${start} s/d ${end}`;
+          const [existingLog] = await db.query(
+            `SELECT id FROM inventory_transactions WHERE type = 'report' AND reference = ?`,
+            [refPeriod]
+          );
+          if (existingLog.length === 0) {
+            await db.query(
+              `INSERT INTO inventory_transactions (item_id, type, quantity, transaction_date, reference, notes, created_at, updated_at)
+               VALUES (NULL, 'report', 0, CURDATE(), ?, ?, NOW(), NOW())`,
+              [refPeriod, `Laporan opname digenerate oleh ${req.session.username || 'Admin'}`]
+            );
+          }
+        }
       }
     }
 
@@ -233,43 +249,107 @@ const exportPDF = async (req, res, next) => {
       [start, end]
     );
 
-    const doc = new PDFDocument({ margin: 40, size: 'A4' });
+    const doc = new PDFDocument({ margin: 50, size: 'A4', layout: 'landscape' });
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="laporan-stok-${start}-${end}.pdf"`);
     doc.pipe(res);
 
-    doc.fontSize(16).font('Helvetica-Bold').text('Laporan Stok Opname', { align: 'center' });
-    doc.fontSize(11).font('Helvetica').text(`Periode: ${start} s/d ${end}`, { align: 'center' });
-    doc.moveDown();
+    const pageW = doc.page.width;
+    const margin = 50;
+    const contentW = pageW - margin * 2;
 
-    // Header tabel
-    const colX = [40, 60, 200, 280, 330, 400, 490];
-    const headers = ['No', 'Kode', 'Nama Barang', 'Tanggal', 'Selisih', 'Referensi', 'Keterangan'];
-    doc.fontSize(9).font('Helvetica-Bold');
-    headers.forEach((h, i) => doc.text(h, colX[i], doc.y, { width: colX[i+1] - colX[i] || 100, lineBreak: false }));
-    doc.moveDown(0.5);
-    doc.moveTo(40, doc.y).lineTo(560, doc.y).stroke();
-    doc.moveDown(0.3);
+    // ── Header ──────────────────────────────────────────────
+    doc.fontSize(16).font('Helvetica-Bold')
+       .text('LAPORAN STOK OPNAME', margin, 50, { align: 'center', width: contentW });
+    doc.fontSize(10).font('Helvetica')
+       .text('Fakultas Teknologi Informasi - Universitas Andalas', margin, 72, { align: 'center', width: contentW });
+    doc.fontSize(10)
+       .text(`Periode: ${start}  s/d  ${end}`, margin, 88, { align: 'center', width: contentW });
 
-    doc.font('Helvetica').fontSize(9);
+    // Garis bawah header
+    doc.moveTo(margin, 105).lineTo(pageW - margin, 105).strokeColor('#cccccc').lineWidth(1).stroke();
+    doc.strokeColor('#000000');
+
+    // ── Definisi kolom tabel ─────────────────────────────────
+    // [label, x, width, align]
+    const cols = [
+      { label: 'No',           x: margin,       w: 28,  align: 'center' },
+      { label: 'Tanggal',      x: margin + 28,  w: 65,  align: 'left'   },
+      { label: 'Kode Barang',  x: margin + 93,  w: 75,  align: 'left'   },
+      { label: 'Nama Barang',  x: margin + 168, w: 195, align: 'left'   },
+      { label: 'Selisih',      x: margin + 363, w: 55,  align: 'center' },
+      { label: 'Referensi',    x: margin + 418, w: 95,  align: 'left'   },
+      { label: 'Keterangan',   x: margin + 513, w: contentW - 463, align: 'left' },
+    ];
+
+    // ── Header row tabel ─────────────────────────────────────
+    let rowY = 115;
+    const rowH = 16;
+    const headerH = 20;
+
+    doc.rect(margin, rowY, contentW, headerH).fillAndStroke('#f3f4f6', '#e5e7eb');
+    doc.fillColor('#374151').fontSize(8).font('Helvetica-Bold');
+    cols.forEach(col => {
+      doc.text(col.label, col.x + 3, rowY + 6, { width: col.w - 6, align: col.align, lineBreak: false });
+    });
+    doc.fillColor('#000000');
+    rowY += headerH;
+
+    // Garis bawah header tabel
+    doc.moveTo(margin, rowY).lineTo(pageW - margin, rowY).strokeColor('#e5e7eb').lineWidth(0.5).stroke();
+
+    // ── Data rows ────────────────────────────────────────────
+    doc.font('Helvetica').fontSize(8);
     data.forEach((row, idx) => {
-      const y = doc.y;
-      if (y > 750) { doc.addPage(); }
-      const cols = [
+      if (rowY > doc.page.height - 70) {
+        doc.addPage({ layout: 'landscape' });
+        rowY = 50;
+        // Repeat header
+        doc.rect(margin, rowY, contentW, headerH).fillAndStroke('#f3f4f6', '#e5e7eb');
+        doc.fillColor('#374151').fontSize(8).font('Helvetica-Bold');
+        cols.forEach(col => {
+          doc.text(col.label, col.x + 3, rowY + 6, { width: col.w - 6, align: col.align, lineBreak: false });
+        });
+        doc.fillColor('#000000').font('Helvetica');
+        rowY += headerH;
+        doc.moveTo(margin, rowY).lineTo(pageW - margin, rowY).strokeColor('#e5e7eb').lineWidth(0.5).stroke();
+      }
+
+      // Row background on alternate rows
+      if (idx % 2 === 1) {
+        doc.rect(margin, rowY, contentW, rowH).fill('#f9fafb');
+      }
+      doc.fillColor('#111827');
+
+      const txDate = String(row.transaction_date).substring(0, 10);
+      const qty = (row.quantity > 0 ? '+' : '') + row.quantity + ' ' + (row.unit || '');
+      const keterangan = (row.notes || '-').substring(0, 40);
+
+      const values = [
         String(idx + 1),
-        row.item_code,
-        row.item_name,
-        String(row.transaction_date).substring(0, 10),
-        (row.quantity > 0 ? '+' : '') + row.quantity + ' ' + row.unit,
-        row.reference || '-',
-        row.notes || '-'
+        txDate,
+        row.item_code || '-',
+        row.item_name || '-',
+        qty,
+        (row.reference || '-').substring(0, 20),
+        keterangan
       ];
-      cols.forEach((c, i) => doc.text(c, colX[i], doc.y, { width: (colX[i+1] || 560) - colX[i], lineBreak: false }));
-      doc.moveDown(0.5);
+
+      cols.forEach((col, ci) => {
+        doc.text(values[ci], col.x + 3, rowY + 4, { width: col.w - 6, align: col.align, lineBreak: false });
+      });
+
+      // Garis bawah baris
+      rowY += rowH;
+      doc.moveTo(margin, rowY).lineTo(pageW - margin, rowY).strokeColor('#f3f4f6').lineWidth(0.3).stroke();
     });
 
-    doc.moveDown();
-    doc.fontSize(9).text(`Total: ${data.length} transaksi`, { align: 'right' });
+    // ── Footer ────────────────────────────────────────────────
+    doc.moveTo(margin, rowY + 8).lineTo(pageW - margin, rowY + 8).strokeColor('#cccccc').lineWidth(1).stroke();
+    doc.fontSize(8).fillColor('#6b7280').font('Helvetica')
+       .text(`Total: ${data.length} transaksi opname`, margin, rowY + 12, { align: 'right', width: contentW })
+       .text(`Dicetak: ${new Date().toLocaleDateString('id-ID')}  |  Facultyware — Logistik & Inventori FTI UNAND`, margin, rowY + 24, { align: 'left', width: contentW });
+
     doc.end();
   } catch (err) { next(err); }
 };
@@ -344,12 +424,12 @@ const reportHistory = async (req, res, next) => {
     const offset = (page - 1) * limit;
 
     const [[{ total }]] = await db.query(
-      `SELECT COUNT(*) as total FROM inventory_transactions WHERE type = 'REPORT'`
+      `SELECT COUNT(*) as total FROM inventory_transactions WHERE type = 'report'`
     );
     const [logs] = await db.query(
       `SELECT it.*, i.name as item_name FROM inventory_transactions it
        LEFT JOIN items i ON it.item_id = i.id
-       WHERE it.type = 'REPORT'
+       WHERE it.type = 'report'
        ORDER BY it.created_at DESC LIMIT ? OFFSET ?`,
       [limit, offset]
     );
