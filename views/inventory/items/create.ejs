@@ -69,10 +69,11 @@
             </div>
 
             <div class="field-group">
-              <label for="kode-barang">Kode Barang <span class="required-star">*</span></label>
-              <input type="text" id="kode-barang" name="code" value="<%= old.code || '' %>"
-                     placeholder="cth: ITK-001" class="input" required style="font-family:monospace; font-size:0.9rem"/>
-              <span class="field-hint">Kode harus unik dan tidak boleh sama dengan barang lain</span>
+              <label>Kode Barang</label>
+              <div style="display:flex; align-items:center; gap:0.5rem; padding:0.5rem 0.75rem; background:var(--muted); border:1px solid var(--border); border-radius:0.5rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--muted-foreground); flex-shrink:0"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                <span style="font-size:0.8rem; color:var(--muted-foreground);">Kode barang akan di-generate otomatis oleh sistem <strong style="color:var(--foreground)">(BRG-XXX)</strong></span>
+              </div>
             </div>
 
             <div class="grid grid-cols-2 gap-4">

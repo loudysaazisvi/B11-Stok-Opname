@@ -12,10 +12,10 @@
     .stat-card {
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 0.75rem;
-      padding: 1.25rem 1.5rem;
+      border-radius: 0.5rem;
+      padding: 1rem 1.5rem;
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       gap: 1rem;
       transition: box-shadow 0.2s ease, transform 0.2s ease;
     }
@@ -24,9 +24,9 @@
       box-shadow: 0 8px 25px -5px rgba(0,0,0,0.12), 0 4px 6px -2px rgba(0,0,0,0.05);
     }
     .stat-icon {
-      width: 2.5rem;
-      height: 2.5rem;
-      border-radius: 0.6rem;
+      width: 3rem;
+      height: 3rem;
+      border-radius: 0.5rem;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -36,8 +36,8 @@
     .stat-icon.green  { background: rgba(34,197,94,0.12);  color: #22c55e; }
     .stat-icon.red    { background: rgba(239,68,68,0.12);  color: #ef4444; }
     .stat-icon.amber  { background: rgba(245,158,11,0.12); color: #f59e0b; }
-    .stat-value { font-size: 1.6rem; font-weight: 700; line-height: 1; }
-    .stat-label { font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.2rem; }
+    .stat-value { font-size: 1.8rem; font-weight: 700; line-height: 1.1; }
+    .stat-label { font-size: 0.8rem; color: var(--muted-foreground); margin-top: 0.15rem; }
     /* Page-level action strip */
     .page-action-bar {
       display: flex;
@@ -50,11 +50,9 @@
     .data-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
     .data-table thead th {
       padding: 0.75rem 1rem;
-      font-weight: 600;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--muted-foreground);
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: var(--foreground);
       background: var(--muted);
       border-bottom: 1px solid var(--border);
       text-align: left;
@@ -73,8 +71,10 @@
     .badge { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; }
     .badge-danger  { background: rgba(239,68,68,0.12);   color: #dc2626; }
     .badge-success { background: rgba(34,197,94,0.12);   color: #16a34a; }
+    .badge-warning { background: rgba(245,158,11,0.12);  color: #b45309; }
     .dark .badge-danger  { background: rgba(239,68,68,0.2);  color: #f87171; }
     .dark .badge-success { background: rgba(34,197,94,0.2);  color: #4ade80; }
+    .dark .badge-warning { background: rgba(245,158,11,0.2);  color: #fbbf24; }
     .code-chip { font-family: monospace; font-size: 0.72rem; background: var(--muted); color: var(--muted-foreground); padding: 0.15rem 0.4rem; border-radius: 0.3rem; border: 1px solid var(--border); }
     /* Alert box */
     .alert-success { background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.25); color: #15803d; border-radius: 0.5rem; padding: 0.75rem 1rem; font-size: 0.875rem; }
@@ -107,42 +107,42 @@
       <% if (success) { %><div class="alert-success"><%= success %></div><% } %>
       <% if (error) { %><div class="alert-error"><%= error %></div><% } %>
 
-      <%# Stat Summary Cards %>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <%# Stat Summary Cards (2x2 Grid, Larger Size) %>
+      <div class="grid grid-cols-2 gap-4">
         <div class="stat-card">
           <div class="stat-icon blue">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
           </div>
           <div>
-            <div class="stat-value"><%= totalData %></div>
+            <div class="stat-value" style="color:#1e40af"><%= totalData %></div>
             <div class="stat-label">Total Barang</div>
           </div>
         </div>
         <div class="stat-card">
           <div class="stat-icon green">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
           </div>
           <div>
-            <div class="stat-value" style="color:#22c55e"><%= items.filter(i => i.stock >= i.minimal_quantity).length %></div>
+            <div class="stat-value" style="color:#22c55e"><%= normalCount %></div>
             <div class="stat-label">Stok Normal</div>
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon red">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+          <div class="stat-icon amber">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
           </div>
           <div>
-            <div class="stat-value" style="color:#ef4444"><%= items.filter(i => i.stock < i.minimal_quantity && i.minimal_quantity > 0).length %></div>
+            <div class="stat-value" style="color:#f59e0b"><%= lowCount %></div>
             <div class="stat-label">Stok Rendah</div>
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon amber">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+          <div class="stat-icon red">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" x2="9" y1="9" y2="15"/><line x1="9" x2="15" y1="9" y2="15"/></svg>
           </div>
           <div>
-            <div class="stat-value" style="color:#f59e0b"><%= showInactive ? 'Nonaktif' : 'Aktif' %></div>
-            <div class="stat-label">Status Filter</div>
+            <div class="stat-value" style="color:#ef4444"><%= emptyCount %></div>
+            <div class="stat-label">Stok Habis</div>
           </div>
         </div>
       </div>
@@ -171,22 +171,22 @@
       </div>
 
       <%# Toolbar Export/Import & Count %>
-      <div class="page-action-bar">
+      <div class="page-action-bar" style="margin-top: 1.75rem; margin-bottom: 1.25rem;">
         <span class="text-sm text-muted-foreground">
           Menampilkan <strong><%= items.length %></strong> dari <strong><%= totalData %></strong> barang
           <% if (showInactive) { %><span style="color:#f59e0b"> (nonaktif)</span><% } %>
         </span>
         <div class="flex gap-2 flex-wrap">
-          <a href="/inventory/items/template" class="btn-sm-outline" id="btn-template-barang" style="color: #6366f1; border-color: rgba(99,102,241,0.3); background: rgba(99,102,241,0.03)">
-            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <a href="/inventory/items/template" class="btn-sm" id="btn-template-barang" style="font-weight: 700; color: #ffffff; background: #2563eb; border-color: #2563eb;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             Unduh Template
           </a>
-          <a href="/inventory/items/export" class="btn-sm-outline" id="btn-ekspor-barang">
-            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+          <a href="/inventory/items/export" class="btn-sm" id="btn-ekspor-barang" style="font-weight: 700; color: #ffffff; background: #16a34a; border-color: #16a34a;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
             Ekspor Excel
           </a>
-          <label class="btn-sm-outline cursor-pointer" id="label-impor-barang">
-            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+          <label class="btn-sm cursor-pointer" id="label-impor-barang" style="font-weight: 700; color: #ffffff; background: #16a34a; border-color: #16a34a; display: inline-flex; align-items: center;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
             Impor Excel
             <form method="POST" action="/inventory/items/import" enctype="multipart/form-data" id="form-impor-barang">
               <input type="file" name="file" accept=".xlsx,.xls" class="hidden" onchange="this.form.submit()"/>
@@ -233,15 +233,17 @@
                     <td style="color:var(--muted-foreground)"><%= item.unit %></td>
                     <td style="text-align:center"><%= item.minimal_quantity %></td>
                     <td style="text-align:center">
-                      <span style="font-weight:700; font-size:1rem; color:<%= item.stock < item.minimal_quantity ? '#ef4444' : '#22c55e' %>">
+                      <span style="font-weight:700; font-size:1rem; color:<%= item.stock === 0 ? '#ef4444' : item.stock < item.minimal_quantity ? '#f59e0b' : '#22c55e' %>">
                         <%= item.stock %>
                       </span>
                     </td>
                     <td style="text-align:center">
-                      <% if (item.stock < item.minimal_quantity && item.minimal_quantity > 0) { %>
-                        <span class="badge badge-danger">⚠ Stok Rendah</span>
+                      <% if (item.stock === 0) { %>
+                        <span class="badge badge-danger">Habis</span>
+                      <% } else if (item.stock < item.minimal_quantity) { %>
+                        <span class="badge badge-warning">Stok Rendah</span>
                       <% } else { %>
-                        <span class="badge badge-success">✓ Normal</span>
+                        <span class="badge badge-success">Normal</span>
                       <% } %>
                     </td>
                     <td style="text-align:center">
