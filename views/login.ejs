@@ -1,240 +1,347 @@
 <!doctype html>
-<html lang="en">
+<html lang="id">
   <head>
     <script>
       (() => {
         try {
           const stored = localStorage.getItem("themeMode");
-          if (
-            stored
-              ? stored === "dark"
-              : matchMedia("(prefers-color-scheme: dark)").matches
-          ) {
+          if (stored ? stored === "dark" : matchMedia("(prefers-color-scheme: dark)").matches) {
             document.documentElement.classList.add("dark");
           }
         } catch (_) {}
-
         const apply = (dark) => {
           document.documentElement.classList.toggle("dark", dark);
-          try {
-            localStorage.setItem("themeMode", dark ? "dark" : "light");
-          } catch (_) {}
+          try { localStorage.setItem("themeMode", dark ? "dark" : "light"); } catch (_) {}
         };
-
-        document.addEventListener("basecoat:theme", (event) => {
-          const mode = event.detail?.mode;
-          apply(
-            mode === "dark"
-              ? true
-              : mode === "light"
-                ? false
-                : !document.documentElement.classList.contains("dark"),
-          );
+        document.addEventListener("basecoat:theme", (e) => {
+          const mode = e.detail?.mode;
+          apply(mode === "dark" ? true : mode === "light" ? false : !document.documentElement.classList.contains("dark"));
         });
       })();
     </script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Login - Facultyware</title>
+    <title>Login - Sistem Logistik FTI UNAND</title>
+    <meta name="description" content="Login ke Sistem Logistik & Inventori Fakultas Teknologi Informasi Universitas Andalas"/>
     <link rel="stylesheet" href="/assets/styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-      /* Custom Premium Styles for Login */
+      *, *::before, *::after { box-sizing: border-box; }
+
       body {
-        background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 40%),
-                    radial-gradient(circle at bottom left, rgba(59, 130, 246, 0.05), transparent 40%),
-                    var(--background);
-        transition: background-color 0.3s ease;
-      }
-      .login-card {
-        border: 1px solid var(--border) !important;
-        background: rgba(var(--card), 0.8) !important;
-        backdrop-filter: blur(12px);
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
-        border-radius: 1rem !important;
-        overflow: hidden;
-        width: 100%;
-        max-width: 420px;
-        margin: 0 auto;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      }
-      .login-grid {
-        display: block;
-      }
-      .artwork-col {
-        display: none;
-      }
-      @media (min-width: 768px) {
-        .login-card {
-          max-width: 900px !important;
-        }
-        .login-grid {
-          display: grid !important;
-          grid-template-columns: 1fr 1fr !important;
-        }
-        .artwork-col {
-          display: block !important;
-        }
-      }
-      .brand-badge {
-        display: inline-flex;
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+        min-height: 100vh;
+        display: flex;
         align-items: center;
-        gap: 0.5rem;
-        background: rgba(59, 130, 246, 0.1);
-        color: #3b82f6;
-        padding: 0.35rem 0.75rem;
-        border-radius: 9999px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-        margin-bottom: 1rem;
+        justify-content: center;
+        background: #f0f2f5;
+        padding: 1.5rem;
       }
-      .input-field {
-        transition: all 0.2s ease-in-out;
+
+      .dark body {
+        background: #0f172a;
       }
-      .input-field:focus {
-        border-color: #3b82f6 !important;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+
+      /* ── Card ── */
+      .login-card {
+        width: 100%;
+        max-width: 400px;
+        background: #ffffff;
+        border-radius: 1.25rem;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.07), 0 20px 50px -12px rgba(0,0,0,0.12);
+        padding: 2.5rem 2rem 2rem;
+        position: relative;
+        overflow: hidden;
       }
-      .btn-submit {
-        background-color: #3b82f6 !important;
-        color: #ffffff !important;
-        font-weight: 600 !important;
-        transition: all 0.2s ease-in-out !important;
-        box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2), 0 2px 4px -1px rgba(59, 130, 246, 0.1) !important;
-      }
-      .btn-submit:hover {
-        background-color: #2563eb !important;
-        transform: translateY(-1px);
-        box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3), 0 4px 6px -2px rgba(59, 130, 246, 0.15) !important;
-      }
-      .btn-submit:active {
-        transform: translateY(0);
-      }
+
       .dark .login-card {
-        background: rgba(30, 41, 59, 0.7) !important;
+        background: #1e293b;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3), 0 20px 50px -12px rgba(0,0,0,0.4);
       }
-      .dark .brand-badge {
-        background: rgba(59, 130, 246, 0.2);
-        color: #60a5fa;
+
+      /* Decorative top accent line */
+      .login-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #3b82f6, #6366f1, #3b82f6);
       }
+
+      /* ── Logo area ── */
+      .logo-area {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        margin-bottom: 1.75rem;
+      }
+
+      /* FTI Logo SVG container */
+      .fti-logo-wrap {
+        flex-shrink: 0;
+        width: 44px;
+        height: 44px;
+      }
+
+      .logo-text-group {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.2;
+      }
+
+      .logo-text-top {
+        font-size: 0.65rem;
+        font-weight: 500;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      .logo-text-main {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #1e293b;
+        letter-spacing: 0.01em;
+      }
+
+      .dark .logo-text-top  { color: #94a3b8; }
+      .dark .logo-text-main { color: #f1f5f9; }
+
+      /* ── Heading ── */
+      .login-heading {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0 0 0.35rem;
+        letter-spacing: -0.02em;
+      }
+      .login-sub {
+        font-size: 0.82rem;
+        color: #64748b;
+        margin: 0 0 1.75rem;
+      }
+      .dark .login-heading { color: #f1f5f9; }
+      .dark .login-sub     { color: #94a3b8; }
+
+      /* ── Error box ── */
+      .error-box {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #dc2626;
+        border-radius: 0.6rem;
+        padding: 0.65rem 0.875rem;
+        font-size: 0.82rem;
+        font-weight: 500;
+        margin-bottom: 1.25rem;
+      }
+      .dark .error-box { background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.3); color: #f87171; }
+
+      /* ── Form ── */
+      .field-label {
+        display: block;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #475569;
+        margin-bottom: 0.45rem;
+      }
+      .dark .field-label { color: #94a3b8; }
+
+      .field-wrap {
+        position: relative;
+        margin-bottom: 1.1rem;
+      }
+
+      .field-input {
+        width: 100%;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 0.6rem;
+        background: #f8fafc;
+        color: #0f172a;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.9rem;
+        padding: 0.7rem 0.875rem;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      }
+      .field-input::placeholder { color: #94a3b8; }
+      .field-input:focus {
+        border-color: #3b82f6;
+        background: #ffffff;
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+      }
+      .dark .field-input {
+        background: #0f172a;
+        border-color: #334155;
+        color: #f1f5f9;
+      }
+      .dark .field-input:focus {
+        border-color: #3b82f6;
+        background: #0f172a;
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+      }
+
+      /* Password eye toggle */
+      .field-input.has-eye { padding-right: 2.75rem; }
+      .eye-btn {
+        position: absolute;
+        right: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0.25rem;
+        color: #94a3b8;
+        display: flex;
+        align-items: center;
+      }
+      .eye-btn:hover { color: #64748b; }
+      .dark .eye-btn:hover { color: #cbd5e1; }
+
+      /* ── Submit button ── */
+      .btn-login {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        background: #2563eb;
+        color: #ffffff;
+        border: none;
+        border-radius: 0.65rem;
+        padding: 0.75rem 1rem;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+        box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+        margin-top: 0.5rem;
+      }
+      .btn-login:hover {
+        background: #1d4ed8;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(37,99,235,0.4);
+      }
+      .btn-login:active { transform: translateY(0); }
+
+      /* ── Footer ── */
+      .login-footer {
+        margin-top: 1.75rem;
+        text-align: center;
+        font-size: 0.7rem;
+        color: #94a3b8;
+        letter-spacing: 0.03em;
+      }
+      .dark .login-footer { color: #64748b; }
     </style>
   </head>
-  <body class="bg-background min-h-svh flex flex-col justify-between">
-    <!-- Header/Logo area -->
-    <div class="w-full max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-2 font-bold text-lg text-foreground">
-        <div class="bg-blue-600 text-white p-1.5 rounded-lg shadow-md">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="size-5">
-            <path d="m7.5 4.27 9 5.15"/>
-            <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
-            <path d="m3.3 7 8.7 5 8.7-5"/>
-            <path d="M12 22V12"/>
+  <body>
+    <div class="login-card">
+
+      <!-- Logo FTI UNAND -->
+      <div class="logo-area">
+        <div class="fti-logo-wrap">
+          <!-- FTI UNAND Logo SVG (stylized FI mark) -->
+          <svg viewBox="0 0 88 88" xmlns="http://www.w3.org/2000/svg" width="44" height="44">
+            <!-- Big F shape -->
+            <rect x="6"  y="6"  width="13" height="52" rx="3" fill="#7A8FA6"/>
+            <rect x="6"  y="6"  width="44" height="13" rx="3" fill="#7A8FA6"/>
+            <rect x="6"  y="29" width="30" height="11" rx="3" fill="#7A8FA6"/>
+            <!-- Small second F (offset lower-right) -->
+            <rect x="34" y="36" width="11" height="46" rx="3" fill="#9AAFC4"/>
+            <rect x="34" y="36" width="48" height="11" rx="3" fill="#9AAFC4"/>
+            <rect x="34" y="58" width="30" height="10" rx="3" fill="#9AAFC4"/>
           </svg>
         </div>
-        <span>Facultyware</span>
-      </div>
-      <!-- Theme toggle or backup info -->
-      <span class="text-xs text-muted-foreground font-medium">Logistik & Inventori System</span>
-    </div>
-
-    <!-- Login Card Container -->
-    <div class="flex-1 flex items-center justify-center p-6 md:p-10">
-      <div class="w-full max-w-sm md:max-w-4xl" style="max-width: none !important;">
-        <div class="login-card rounded-2xl border bg-card text-card-foreground shadow-xl overflow-hidden p-0">
-          <div class="login-grid p-0">
-            
-            <!-- Left Column: Form -->
-            <form class="p-8 md:p-10 flex flex-col justify-center" action="/login" method="POST">
-              <div class="flex flex-col gap-6">
-                <div class="flex flex-col items-center md:items-start gap-1">
-                  <div class="brand-badge">Logistik Portal</div>
-                  <h1 class="text-2xl font-bold tracking-tight text-foreground">Selamat Datang</h1>
-                  <p class="text-sm text-muted-foreground text-center md:text-left">
-                    Masukkan akun Anda untuk mengelola inventori.
-                  </p>
-                </div>
-                
-                <% if (error) { %>
-                  <div class="bg-destructive/10 text-destructive text-sm p-3.5 rounded-lg border border-destructive/20 text-center font-medium animate-pulse">
-                    <%= error %>
-                  </div>
-                <% } %>
-
-                <div class="flex flex-col gap-4">
-                  <!-- Username Field -->
-                  <div class="flex flex-col gap-2">
-                    <label class="text-sm font-semibold text-foreground" for="username">Username / Email</label>
-                    <input
-                      type="text"
-                      name="username"
-                      class="input-field h-10 w-full rounded-lg border border-input bg-background/50 px-3.5 py-2 text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50 dark:bg-slate-900/30"
-                      id="username"
-                      placeholder="admin atau admin@facultyware.com"
-                      required
-                    />
-                  </div>
-
-                  <!-- Password Field -->
-                  <div class="flex flex-col gap-2">
-                    <div class="flex items-center justify-between">
-                      <label class="text-sm font-semibold text-foreground" for="password">Password</label>
-                      <a href="#" class="text-xs text-blue-600 hover:underline">Lupa password?</a>
-                    </div>
-                    <input
-                      type="password"
-                      name="password"
-                      class="input-field h-10 w-full rounded-lg border border-input bg-background/50 px-3.5 py-2 text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50 dark:bg-slate-900/30"
-                      id="password"
-                      placeholder="••••••••"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  class="btn-submit inline-flex h-10 items-center justify-center rounded-lg text-sm font-semibold shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                >
-                  Masuk Ke Dashboard
-                </button>
-
-                <p class="text-xs text-muted-foreground text-center">
-                  Butuh bantuan akses? Hubungi <a href="#" class="text-blue-600 hover:underline">System Administrator</a>
-                </p>
-              </div>
-            </form>
-            
-            <!-- Right Column: Artwork Image -->
-            <div class="relative bg-slate-950 artwork-col" style="min-height: 400px;">
-              <img
-                src="/assets/images/login_artwork.png"
-                alt="Branding Artwork"
-                class="absolute inset-0 h-full w-full object-cover opacity-85 dark:opacity-75"
-              />
-              <!-- Subtle overlay gradients -->
-              <div class="absolute inset-0 bg-gradient-to-r from-card via-transparent to-transparent pointer-events-none"></div>
-              <div class="absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-transparent pointer-events-none"></div>
-              
-              <!-- Subtle watermark brand in bottom right corner -->
-              <div class="absolute bottom-6 right-6 text-white/50 text-xs font-mono tracking-wider uppercase">
-                Facultyware System
-              </div>
-            </div>
-            
-          </div>
+        <div class="logo-text-group">
+          <span class="logo-text-top">Sistem Logistik &amp; Inventori</span>
+          <span class="logo-text-main">FTI · UNIVERSITAS ANDALAS</span>
         </div>
       </div>
+
+      <!-- Heading -->
+      <h1 class="login-heading">Selamat datang</h1>
+      <p class="login-sub">Masukkan akun Anda untuk melanjutkan</p>
+
+      <!-- Error -->
+      <% if (error) { %>
+        <div class="error-box"><%= error %></div>
+      <% } %>
+
+      <!-- Form -->
+      <form action="/login" method="POST" autocomplete="off">
+
+        <div class="field-wrap">
+          <label class="field-label" for="username">Username</label>
+          <input
+            class="field-input"
+            type="text"
+            id="username"
+            name="username"
+            placeholder="Masukkan username Anda..."
+            autocomplete="username"
+            required
+          />
+        </div>
+
+        <div class="field-wrap">
+          <label class="field-label" for="password">Password</label>
+          <input
+            class="field-input has-eye"
+            type="password"
+            id="password"
+            name="password"
+            placeholder="••••••••"
+            autocomplete="current-password"
+            required
+          />
+          <button type="button" class="eye-btn" id="toggle-pw" aria-label="Tampilkan password">
+            <!-- Eye icon -->
+            <svg id="icon-eye-open" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            <svg id="icon-eye-shut" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+              <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/>
+              <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/>
+              <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/>
+              <line x1="2" x2="22" y1="2" y2="22"/>
+            </svg>
+          </button>
+        </div>
+
+        <button type="submit" class="btn-login">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+            <polyline points="10 17 15 12 10 7"/>
+            <line x1="15" x2="3" y1="12" y2="12"/>
+          </svg>
+          Masuk ke Sistem
+        </button>
+      </form>
+
+      <!-- Footer -->
+      <p class="login-footer">© 2026 FTI UNAND &nbsp;·&nbsp; HAK CIPTA DILINDUNGI</p>
     </div>
 
-    <!-- Footer area -->
-    <div class="w-full max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-2 border-t border-border/40 text-xs text-muted-foreground">
-      <p>&copy; 2026 Facultyware. All rights reserved.</p>
-      <div class="flex gap-4">
-        <a href="#" class="hover:text-foreground">Terms of Service</a>
-        <a href="#" class="hover:text-foreground">Privacy Policy</a>
-      </div>
-    </div>
     <div id="toaster" class="toaster"></div>
+    <script>
+      // Password show/hide toggle
+      const pwInput = document.getElementById('password');
+      const toggleBtn = document.getElementById('toggle-pw');
+      const eyeOpen = document.getElementById('icon-eye-open');
+      const eyeShut = document.getElementById('icon-eye-shut');
+      toggleBtn.addEventListener('click', () => {
+        const isHidden = pwInput.type === 'password';
+        pwInput.type = isHidden ? 'text' : 'password';
+        eyeOpen.style.display = isHidden ? 'none' : '';
+        eyeShut.style.display = isHidden ? ''     : 'none';
+      });
+    </script>
   </body>
 </html>
