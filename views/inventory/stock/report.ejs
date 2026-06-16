@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <script>(() => { try { const s = localStorage.getItem("themeMode"); if (s ? s === "dark" : matchMedia("(prefers-color-scheme: dark)").matches) document.documentElement.classList.add("dark"); } catch(_){} })();</script>
+  <meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Laporan Opname - Facultyware</title>
+  <link rel="stylesheet" href="/assets/styles.css"/>
+</head>
+<body>
+  <%- include('../sidebar', { activePage: 'opname', user: user }) %>
+
+  <main id="content">
+    <header class="bg-background sticky inset-x-0 top-0 isolate flex shrink-0 items-center gap-2 border-b z-10">
+      <div class="flex h-14 w-full items-center gap-2 px-4">
+        <button type="button" onclick="document.dispatchEvent(new CustomEvent('basecoat:sidebar'))" class="btn-sm-icon-ghost mr-2 size-7 -ml-1.5">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg>
+        </button>
+        <span class="font-semibold text-sm">Laporan Stok Opname</span>
+      </div>
+    </header>
+
+    <div class="p-6 space-y-4">
+      <!-- Form periode -->
+      <div class="card">
+        <header><h2>Generate Laporan</h2><p class="text-muted-foreground text-sm">Pilih periode untuk menampilkan laporan stok opname</p></header>
+        <section>
+          <% if (errors.length > 0) { %>
+            <div class="rounded-md bg-red-50 border border-red-200 px-4 py-3 text-red-800 text-sm mb-4">
+              <% errors.forEach(e => { %><p><%= e %></p><% }) %>
+            </div>
+          <% } %>
+          <form method="GET" action="/inventory/stock/report" class="flex gap-3 flex-wrap items-end" id="reportForm">
+            <div class="grid gap-1">
+              <label class="text-sm font-medium">Dari Tanggal <span class="text-red-500">*</span></label>
+              <input type="date" name="start" value="<%= start %>" class="input" required/>
+            </div>
+            <div class="grid gap-1">
+              <label class="text-sm font-medium">Sampai Tanggal <span class="text-red-500">*</span></label>
+              <input type="date" name="end" value="<%= end %>" class="input" required/>
+            </div>
+            <button type="submit" class="btn-sm">Tampilkan</button>
+            <% if (start && end && data.length > 0) { %>
+              <a href="/inventory/stock/report/export/pdf?start=<%= start %>&end=<%= end %>" class="btn-sm-outline" target="_blank">Export PDF</a>
+              <a href="/inventory/stock/report/export/excel?start=<%= start %>&end=<%= end %>" class="btn-sm-outline">Export Excel</a>
+            <% } %>
+          </form>
+        </section>
+      </div>
+
+      <!-- Hasil laporan -->
+      <% if (start && end && errors.length === 0) { %>
+      <div class="card">
+        <header>
+          <h2>Hasil Laporan</h2>
+          <p class="text-muted-foreground text-sm">Periode: <%= start %> s/d <%= end %> — Total: <%= totalData %> transaksi opname</p>
+        </header>
+        <section class="p-0">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="border-b">
+                <tr class="text-left">
+                  <th class="px-4 py-3 font-medium">No</th>
+                  <th class="px-4 py-3 font-medium">Tanggal</th>
+                  <th class="px-4 py-3 font-medium">Kode</th>
+                  <th class="px-4 py-3 font-medium">Nama Barang</th>
+                  <th class="px-4 py-3 font-medium">Selisih</th>
+                  <th class="px-4 py-3 font-medium">Referensi</th>
+                  <th class="px-4 py-3 font-medium">Keterangan</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (data.length === 0) { %>
+                  <tr><td colspan="7" class="px-4 py-8 text-center text-muted-foreground">Tidak ada data opname pada periode ini</td></tr>
+                <% } else { %>
+                  <% data.forEach((row, idx) => { %>
+                    <tr class="border-b hover:bg-muted/50">
+                      <td class="px-4 py-3"><%= (currentPage-1)*15+idx+1 %></td>
+                      <td class="px-4 py-3"><%= String(row.transaction_date).substring(0,10) %></td>
+                      <td class="px-4 py-3 font-mono text-xs"><%= row.item_code %></td>
+                      <td class="px-4 py-3 font-medium"><%= row.item_name %></td>
+                      <td class="px-4 py-3 font-semibold <%= row.quantity > 0 ? 'text-green-700' : row.quantity < 0 ? 'text-red-600' : '' %>">
+                        <%= row.quantity > 0 ? '+' : '' %><%= row.quantity %> <%= row.unit %>
+                      </td>
+                      <td class="px-4 py-3 text-muted-foreground"><%= row.reference || '-' %></td>
+                      <td class="px-4 py-3"><%= row.notes %></td>
+                    </tr>
+                  <% }) %>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </section>
+        <% if (totalPages > 1) { %>
+        <footer class="flex items-center justify-between px-4 py-3 border-t">
+          <span class="text-sm text-muted-foreground">Halaman <%= currentPage %> dari <%= totalPages %></span>
+          <div class="flex gap-1">
+            <% for (let i = 1; i <= totalPages; i++) { %>
+              <a href="/inventory/stock/report?page=<%= i %>&start=<%= start %>&end=<%= end %>"
+                 class="btn-sm-<%= i===currentPage?'':'outline' %>"><%= i %></a>
+            <% } %>
+          </div>
+        </footer>
+        <% } %>
+      </div>
+      <% } %>
+    </div>
+  </main>
+  <div id="toaster" class="toaster"></div>
+  <script src="/assets/js/sidebar.js"></script>
+  <script>
+    document.getElementById('reportForm').addEventListener('submit', function(e) {
+      const start = this.querySelector('[name=start]').value;
+      const end = this.querySelector('[name=end]').value;
+      if (!start || !end) { e.preventDefault(); alert('Tanggal mulai dan akhir wajib diisi'); return; }
+      if (new Date(start) > new Date(end)) { e.preventDefault(); alert('Tanggal mulai tidak boleh lebih dari tanggal akhir'); }
+    });
+  </script>
+</body>
+</html>

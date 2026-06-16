@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <script>(() => { try { const s = localStorage.getItem("themeMode"); if (s ? s === "dark" : matchMedia("(prefers-color-scheme: dark)").matches) document.documentElement.classList.add("dark"); } catch(_){} })();</script>
+  <meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Riwayat Laporan - Facultyware</title>
+  <link rel="stylesheet" href="/assets/styles.css"/>
+</head>
+<body>
+  <%- include('../sidebar', { activePage: 'history', user: user }) %>
+
+  <main id="content">
+    <header class="bg-background sticky inset-x-0 top-0 isolate flex shrink-0 items-center gap-2 border-b z-10">
+      <div class="flex h-14 w-full items-center gap-2 px-4">
+        <button type="button" onclick="document.dispatchEvent(new CustomEvent('basecoat:sidebar'))" class="btn-sm-icon-ghost mr-2 size-7 -ml-1.5">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg>
+        </button>
+        <a href="/inventory/stock/report" class="text-sm text-muted-foreground hover:underline">Laporan Opname</a>
+        <span class="text-muted-foreground">/</span>
+        <span class="text-sm font-medium">Riwayat Laporan</span>
+      </div>
+    </header>
+
+    <div class="p-6 space-y-4">
+      <div class="card">
+        <header><h2>Riwayat Laporan yang Pernah Di-generate</h2><p class="text-muted-foreground text-sm">Total: <%= totalData %> laporan tercatat</p></header>
+        <section class="p-0">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="border-b">
+                <tr class="text-left">
+                  <th class="px-4 py-3 font-medium">No</th>
+                  <th class="px-4 py-3 font-medium">Waktu Generate</th>
+                  <th class="px-4 py-3 font-medium">Referensi (Periode)</th>
+                  <th class="px-4 py-3 font-medium">Keterangan</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (logs.length === 0) { %>
+                  <tr><td colspan="4" class="px-4 py-8 text-center text-muted-foreground">Belum ada riwayat laporan yang di-generate</td></tr>
+                <% } else { %>
+                  <% logs.forEach((log, idx) => { %>
+                    <tr class="border-b hover:bg-muted/50">
+                      <td class="px-4 py-3"><%= (currentPage-1)*10+idx+1 %></td>
+                      <td class="px-4 py-3"><%= String(log.created_at).substring(0,19).replace('T',' ') %></td>
+                      <td class="px-4 py-3 font-mono text-xs"><%= log.reference || '-' %></td>
+                      <td class="px-4 py-3"><%= log.notes || '-' %></td>
+                    </tr>
+                  <% }) %>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </section>
+        <% if (totalPages > 1) { %>
+        <footer class="flex items-center justify-between px-4 py-3 border-t">
+          <span class="text-sm text-muted-foreground">Halaman <%= currentPage %> dari <%= totalPages %></span>
+          <div class="flex gap-1">
+            <% for (let i = 1; i <= totalPages; i++) { %>
+              <a href="/inventory/stock/report/history?page=<%= i %>" class="btn-sm-<%= i===currentPage?'':'outline' %>"><%= i %></a>
+            <% } %>
+          </div>
+        </footer>
+        <% } %>
+      </div>
+    </div>
+  </main>
+  <div id="toaster" class="toaster"></div>
+  <script src="/assets/js/sidebar.js"></script>
+</body>
+</html>
