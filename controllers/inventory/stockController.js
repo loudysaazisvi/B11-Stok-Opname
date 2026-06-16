@@ -365,4 +365,49 @@ const reportHistory = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { index, history, adjustmentForm, adjustment, report, exportPDF, exportExcel, reportHistory };
+// REST API
+const apiList = async (req, res, next) => {
+  try {
+    const search = req.query.search || '';
+    const filter = req.query.filter || '';
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+
+    let where = '(i.name LIKE ? OR i.code LIKE ?)';
+    let params = [`%${search}%`, `%${search}%`];
+    if (filter === 'low') {
+      where += ' AND COALESCE(inv.quantity, 0) < i.minimal_quantity AND i.minimal_quantity >= 0';
+    }
+
+    const [[{ total }]] = await db.query(
+      `SELECT COUNT(*) as total FROM items i LEFT JOIN inventories inv ON i.id = inv.item_id WHERE ${where}`, params
+    );
+    const [items] = await db.query(
+      `SELECT i.*, COALESCE(inv.quantity, 0) as stock FROM items i
+       LEFT JOIN inventories inv ON i.id = inv.item_id
+       WHERE ${where} ORDER BY i.name ASC LIMIT ? OFFSET ?`,
+      [...params, limit, offset]
+    );
+    res.json({ success: true, data: items, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } });
+  } catch (err) { next(err); }
+};
+
+const apiTransactions = async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+    const [[{ total }]] = await db.query(
+      'SELECT COUNT(*) as total FROM inventory_transactions WHERE item_id = ?', [req.params.id]
+    );
+    const [rows] = await db.query(
+      `SELECT * FROM inventory_transactions WHERE item_id = ?
+       ORDER BY transaction_date DESC LIMIT ? OFFSET ?`,
+      [req.params.id, limit, offset]
+    );
+    res.json({ success: true, data: rows, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } });
+  } catch (err) { next(err); }
+};
+
+module.exports = { index, history, adjustmentForm, adjustment, report, exportPDF, exportExcel, reportHistory, apiList, apiTransactions };
