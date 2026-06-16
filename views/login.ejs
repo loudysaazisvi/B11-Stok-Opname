@@ -52,6 +52,28 @@
         box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
         border-radius: 1rem !important;
         overflow: hidden;
+        width: 100%;
+        max-width: 420px;
+        margin: 0 auto;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .login-grid {
+        display: block;
+      }
+      .artwork-col {
+        display: none;
+      }
+      @media (min-width: 768px) {
+        .login-card {
+          max-width: 900px !important;
+        }
+        .login-grid {
+          display: grid !important;
+          grid-template-columns: 1fr 1fr !important;
+        }
+        .artwork-col {
+          display: block !important;
+        }
       }
       .brand-badge {
         display: inline-flex;
@@ -118,9 +140,9 @@
 
     <!-- Login Card Container -->
     <div class="flex-1 flex items-center justify-center p-6 md:p-10">
-      <div class="w-full max-w-sm md:max-w-4xl">
+      <div class="w-full max-w-sm md:max-w-4xl" style="max-width: none !important;">
         <div class="login-card rounded-2xl border bg-card text-card-foreground shadow-xl overflow-hidden p-0">
-          <div class="grid p-0 md:grid-cols-2">
+          <div class="login-grid p-0">
             
             <!-- Left Column: Form -->
             <form class="p-8 md:p-10 flex flex-col justify-center" action="/login" method="POST">
@@ -184,7 +206,7 @@
             </form>
             
             <!-- Right Column: Artwork Image -->
-            <div class="relative hidden bg-slate-950 md:block">
+            <div class="relative bg-slate-950 artwork-col" style="min-height: 400px;">
               <img
                 src="/assets/images/login_artwork.png"
                 alt="Branding Artwork"
