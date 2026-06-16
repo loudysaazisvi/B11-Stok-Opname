@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <script>(() => { try { const s = localStorage.getItem("themeMode"); if (s ? s === "dark" : matchMedia("(prefers-color-scheme: dark)").matches) document.documentElement.classList.add("dark"); } catch(_){} })();</script>
+  <meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>QR Code - <%= item.name %> - Facultyware</title>
+  <meta name="description" content="QR Code untuk barang <%= item.name %> kode <%= item.code %>"/>
+  <link rel="stylesheet" href="/assets/styles.css"/>
+  <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+</head>
+<body>
+  <%- include('../sidebar', { activePage: 'items', user: user }) %>
+
+  <main id="content">
+    <header class="bg-background sticky inset-x-0 top-0 isolate flex shrink-0 items-center gap-2 border-b z-10">
+      <div class="flex h-14 w-full items-center gap-2 px-4">
+        <button type="button" onclick="document.dispatchEvent(new CustomEvent('basecoat:sidebar'))" class="btn-sm-icon-ghost mr-2 size-7 -ml-1.5" aria-label="Toggle sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg>
+        </button>
+        <span class="font-semibold text-sm flex-1">QR Code Barang</span>
+        <a href="/inventory/items" class="btn-sm-outline" id="btn-kembali-qr">← Kembali</a>
+      </div>
+    </header>
+
+    <div class="p-6 max-w-md">
+      <div class="card text-center">
+        <header class="px-4 py-3 border-b">
+          <h2 class="font-semibold text-sm">QR Code: <%= item.name %></h2>
+          <p class="text-xs text-muted-foreground mt-0.5">Kode: <span class="font-mono"><%= item.code %></span></p>
+        </header>
+        <section class="space-y-4">
+          <div class="flex justify-center py-4" id="qr-container">
+            <img src="<%= qrImage %>" alt="QR Code <%= item.name %>" class="w-56 h-56 rounded-lg border p-2 bg-white" id="qr-image"/>
+          </div>
+          <div class="text-sm space-y-1 text-left bg-muted/30 rounded-md p-3">
+            <div class="flex justify-between"><span class="text-muted-foreground">Nama:</span><span class="font-medium"><%= item.name %></span></div>
+            <div class="flex justify-between"><span class="text-muted-foreground">Kode:</span><span class="font-mono text-xs"><%= item.code %></span></div>
+            <div class="flex justify-between"><span class="text-muted-foreground">Satuan:</span><span><%= item.unit %></span></div>
+            <% if (item.description) { %>
+              <div class="flex justify-between"><span class="text-muted-foreground">Deskripsi:</span><span class="text-right max-w-[60%]"><%= item.description %></span></div>
+            <% } %>
+          </div>
+          <div class="flex gap-2 justify-center pt-2">
+            <button onclick="printQR()" class="btn-sm" id="btn-print-qr">🖨 Cetak QR Code</button>
+            <a href="<%= qrImage %>" download="qr-<%= item.code %>.png" class="btn-sm-outline" id="btn-download-qr">⬇ Unduh</a>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <script src="/assets/js/sidebar.js"></script>
+  <script>
+    function printQR() {
+      const win = window.open('', '_blank');
+      win.document.write('<html><body style="text-align:center;font-family:sans-serif;padding:40px">');
+      win.document.write('<h2><%= item.name %></h2>');
+      win.document.write('<p>Kode: <strong><%= item.code %></strong></p>');
+      win.document.write('<img src="<%= qrImage %>" style="width:200px;height:200px"/>');
+      win.document.write('<p>Satuan: <%= item.unit %></p>');
+      win.document.write('</body></html>');
+      win.document.close();
+      win.print();
+    }
+  </script>
+</body>
+</html>
