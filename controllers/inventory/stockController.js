@@ -11,8 +11,6 @@ function validateAdjustment(body) {
     errors.push('Jumlah stok harus berupa angka bulat non-negatif');
   if (!body.notes || body.notes.trim() === '')
     errors.push('Alasan perubahan wajib diisi');
-  if (body.reference && body.reference.length > 255)
-    errors.push('Nomor referensi maksimal 255 karakter');
   return errors;
 }
 
@@ -36,11 +34,22 @@ const index = async (req, res, next) => {
       params
     );
 
+    const [[counts]] = await db.query(
+      `SELECT 
+        COUNT(CASE WHEN COALESCE(inv.quantity, 0) >= i.minimal_quantity AND COALESCE(inv.quantity, 0) > 0 THEN 1 END) as normal,
+        COUNT(CASE WHEN COALESCE(inv.quantity, 0) < i.minimal_quantity AND COALESCE(inv.quantity, 0) > 0 THEN 1 END) as low,
+        COUNT(CASE WHEN COALESCE(inv.quantity, 0) = 0 THEN 1 END) as empty_stock
+       FROM items i
+       LEFT JOIN inventories inv ON i.id = inv.item_id
+       WHERE (i.name LIKE ? OR i.code LIKE ?)`,
+      [`%${search}%`, `%${search}%`]
+    );
+
     const [items] = await db.query(
       `SELECT i.*, COALESCE(inv.quantity, 0) as stock
        FROM items i LEFT JOIN inventories inv ON i.id = inv.item_id
        WHERE ${where}
-       ORDER BY i.name ASC LIMIT ? OFFSET ?`,
+       ORDER BY i.code ASC LIMIT ? OFFSET ?`,
       [...params, limit, offset]
     );
 
@@ -53,6 +62,9 @@ const index = async (req, res, next) => {
       currentPage: page,
       totalPages: Math.ceil(total / limit),
       totalData: total,
+      normalCount: counts.normal,
+      lowCount: counts.low,
+      emptyCount: counts.empty_stock,
       success: req.query.success || null,
       error: req.query.error || null
     });
@@ -102,7 +114,8 @@ const history = async (req, res, next) => {
       filterEnd,
       currentPage: page,
       totalPages: Math.ceil(total / limit),
-      totalData: total
+      totalData: total,
+      formatDateOnlyIndo
     });
   } catch (err) { next(err); }
 };
@@ -144,7 +157,7 @@ const adjustment = async (req, res, next) => {
     });
   }
   try {
-    const { quantity, notes, reference } = req.body;
+    const { quantity, notes } = req.body;
     const newQty = Number(quantity);
     const [[currentRow]] = await db.query(
       'SELECT COALESCE(quantity, 0) as qty FROM inventories WHERE item_id = ?', [req.params.id]
@@ -154,8 +167,8 @@ const adjustment = async (req, res, next) => {
 
     await db.query(
       `INSERT INTO inventory_transactions (item_id, type, quantity, transaction_date, reference, notes, created_at, updated_at)
-       VALUES (?, 'ADJUSTMENT', ?, CURDATE(), ?, ?, NOW(), NOW())`,
-      [req.params.id, selisih, reference || null, notes.trim()]
+       VALUES (?, 'ADJUSTMENT', ?, CURDATE(), NULL, ?, NOW(), NOW())`,
+      [req.params.id, selisih, notes.trim()]
     );
 
     const [invExist] = await db.query('SELECT id FROM inventories WHERE item_id = ?', [req.params.id]);
@@ -197,7 +210,7 @@ const report = async (req, res, next) => {
            FROM inventory_transactions it
            JOIN items i ON it.item_id = i.id
            WHERE it.type = 'ADJUSTMENT' AND it.transaction_date BETWEEN ? AND ?
-           ORDER BY it.transaction_date DESC LIMIT ? OFFSET ?`,
+           ORDER BY it.transaction_date DESC, it.id DESC LIMIT ? OFFSET ?`,
           [start, end, limit, offset]
         );
         data = rows;
@@ -229,7 +242,8 @@ const report = async (req, res, next) => {
       errors,
       currentPage: page,
       totalPages: Math.ceil(total / limit),
-      totalData: total
+      totalData: total,
+      formatDateOnlyIndo
     });
   } catch (err) { next(err); }
 };
@@ -245,7 +259,7 @@ const exportPDF = async (req, res, next) => {
        FROM inventory_transactions it
        JOIN items i ON it.item_id = i.id
        WHERE it.type = 'ADJUSTMENT' AND it.transaction_date BETWEEN ? AND ?
-       ORDER BY it.transaction_date DESC`,
+       ORDER BY it.transaction_date DESC, it.id DESC`,
       [start, end]
     );
 
@@ -264,7 +278,7 @@ const exportPDF = async (req, res, next) => {
     doc.fontSize(10).font('Helvetica')
        .text('Fakultas Teknologi Informasi - Universitas Andalas', margin, 72, { align: 'center', width: contentW });
     doc.fontSize(10)
-       .text(`Periode: ${start}  s/d  ${end}`, margin, 88, { align: 'center', width: contentW });
+       .text(`Periode: ${formatDateOnlyIndo(start)}  s/d  ${formatDateOnlyIndo(end)}`, margin, 88, { align: 'center', width: contentW });
 
     // Garis bawah header
     doc.moveTo(margin, 105).lineTo(pageW - margin, 105).strokeColor('#cccccc').lineWidth(1).stroke();
@@ -274,12 +288,11 @@ const exportPDF = async (req, res, next) => {
     // [label, x, width, align]
     const cols = [
       { label: 'No',           x: margin,       w: 28,  align: 'center' },
-      { label: 'Tanggal',      x: margin + 28,  w: 65,  align: 'left'   },
-      { label: 'Kode Barang',  x: margin + 93,  w: 75,  align: 'left'   },
-      { label: 'Nama Barang',  x: margin + 168, w: 195, align: 'left'   },
-      { label: 'Selisih',      x: margin + 363, w: 55,  align: 'center' },
-      { label: 'Referensi',    x: margin + 418, w: 95,  align: 'left'   },
-      { label: 'Keterangan',   x: margin + 513, w: contentW - 463, align: 'left' },
+      { label: 'Tanggal',      x: margin + 28,  w: 95,  align: 'left'   },
+      { label: 'Kode Barang',  x: margin + 123, w: 75,  align: 'left'   },
+      { label: 'Nama Barang',  x: margin + 198, w: 175, align: 'left'   },
+      { label: 'Selisih',      x: margin + 373, w: 55,  align: 'center' },
+      { label: 'Keterangan',   x: margin + 428, w: contentW - 378, align: 'left' },
     ];
 
     // ── Header row tabel ─────────────────────────────────────
@@ -321,7 +334,7 @@ const exportPDF = async (req, res, next) => {
       }
       doc.fillColor('#111827');
 
-      const txDate = String(row.transaction_date).substring(0, 10);
+      const txDate = formatDateOnlyIndo(row.transaction_date);
       const qty = (row.quantity > 0 ? '+' : '') + row.quantity + ' ' + (row.unit || '');
       const keterangan = (row.notes || '-').substring(0, 40);
 
@@ -331,7 +344,6 @@ const exportPDF = async (req, res, next) => {
         row.item_code || '-',
         row.item_name || '-',
         qty,
-        (row.reference || '-').substring(0, 20),
         keterangan
       ];
 
@@ -348,8 +360,7 @@ const exportPDF = async (req, res, next) => {
     doc.moveTo(margin, rowY + 8).lineTo(pageW - margin, rowY + 8).strokeColor('#cccccc').lineWidth(1).stroke();
     doc.fontSize(8).fillColor('#6b7280').font('Helvetica')
        .text(`Total: ${data.length} transaksi opname`, margin, rowY + 12, { align: 'right', width: contentW })
-       .text(`Dicetak: ${new Date().toLocaleDateString('id-ID')}  |  Facultyware — Logistik & Inventori FTI UNAND`, margin, rowY + 24, { align: 'left', width: contentW });
-
+       .text(`Dicetak: ${formatDateOnlyIndo(new Date())}  |  Facultyware — Logistik & Inventori FTI UNAND`, margin, rowY + 24, { align: 'left', width: contentW });
     doc.end();
   } catch (err) { next(err); }
 };
@@ -365,7 +376,7 @@ const exportExcel = async (req, res, next) => {
        FROM inventory_transactions it
        JOIN items i ON it.item_id = i.id
        WHERE it.type = 'ADJUSTMENT' AND it.transaction_date BETWEEN ? AND ?
-       ORDER BY it.transaction_date DESC`,
+       ORDER BY it.transaction_date DESC, it.id DESC`,
       [start, end]
     );
 
@@ -383,7 +394,7 @@ const exportExcel = async (req, res, next) => {
 
     sheet.addRow([]);
 
-    sheet.addRow(['No', 'Kode Barang', 'Nama Barang', 'Tanggal', 'Selisih', 'Satuan', 'Referensi', 'Keterangan']);
+    sheet.addRow(['No', 'Kode Barang', 'Nama Barang', 'Tanggal', 'Selisih', 'Satuan', 'Keterangan']);
     sheet.getRow(4).font = { bold: true };
     sheet.columns = [
       { key: 'no', width: 5 },
@@ -392,8 +403,7 @@ const exportExcel = async (req, res, next) => {
       { key: 'date', width: 15 },
       { key: 'qty', width: 10 },
       { key: 'unit', width: 10 },
-      { key: 'ref', width: 20 },
-      { key: 'notes', width: 30 },
+      { key: 'notes', width: 40 },
     ];
 
     data.forEach((row, i) => {
@@ -401,10 +411,9 @@ const exportExcel = async (req, res, next) => {
         i + 1,
         row.item_code,
         row.item_name,
-        String(row.transaction_date).substring(0, 10),
+        formatDateOnlyIndo(row.transaction_date),
         row.quantity,
         row.unit,
-        row.reference || '-',
         row.notes || '-'
       ]);
     });
@@ -415,6 +424,35 @@ const exportExcel = async (req, res, next) => {
     res.end();
   } catch (err) { next(err); }
 };
+
+function formatDateIndo(dateStr) {
+  const date = new Date(dateStr);
+  const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+  const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+  
+  const dayName = days[date.getDay()];
+  const day = date.getDate();
+  const monthName = months[date.getMonth()];
+  const year = date.getFullYear();
+  
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  
+  return `${dayName}, ${day} ${monthName} ${year} (${hours}:${minutes})`;
+}
+
+function formatDateOnlyIndo(dateStr) {
+  const date = new Date(dateStr);
+  const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+  const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+  
+  const dayName = days[date.getDay()];
+  const day = date.getDate();
+  const monthName = months[date.getMonth()];
+  const year = date.getFullYear();
+  
+  return `${dayName}, ${day} ${monthName} ${year}`;
+}
 
 // Fitur 6 - riwayat laporan
 const reportHistory = async (req, res, next) => {
@@ -440,7 +478,8 @@ const reportHistory = async (req, res, next) => {
       logs,
       currentPage: page,
       totalPages: Math.ceil(total / limit),
-      totalData: total
+      totalData: total,
+      formatDateIndo
     });
   } catch (err) { next(err); }
 };
@@ -466,7 +505,7 @@ const apiList = async (req, res, next) => {
     const [items] = await db.query(
       `SELECT i.*, COALESCE(inv.quantity, 0) as stock FROM items i
        LEFT JOIN inventories inv ON i.id = inv.item_id
-       WHERE ${where} ORDER BY i.name ASC LIMIT ? OFFSET ?`,
+       WHERE ${where} ORDER BY i.code ASC LIMIT ? OFFSET ?`,
       [...params, limit, offset]
     );
     res.json({ success: true, data: items, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } });

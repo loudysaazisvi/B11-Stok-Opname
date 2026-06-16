@@ -12,7 +12,7 @@
     .info-cell .lbl { font-size:0.7rem; color:var(--muted-foreground); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.25rem; }
     .info-cell .val { font-size:0.95rem; font-weight:600; }
     .data-table { width:100%; border-collapse:collapse; font-size:0.875rem; }
-    .data-table thead th { padding:0.75rem 1rem; font-weight:600; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted-foreground); background:var(--muted); border-bottom:1px solid var(--border); text-align:left; white-space:nowrap; }
+    .data-table thead th { padding:0.75rem 1rem; font-weight:700; font-size:1.05rem; color:var(--foreground); background:var(--muted); border-bottom:1px solid var(--border); text-align:left; white-space:nowrap; }
     .data-table tbody td { padding:0.875rem 1rem; border-bottom:1px solid var(--border); vertical-align:middle; }
     .data-table tbody tr:last-child td { border-bottom:none; }
     .data-table tbody tr { transition:background-color 0.15s; }
@@ -134,7 +134,7 @@
                 <% transactions.forEach((tx, idx) => { %>
                   <tr>
                     <td style="color:var(--muted-foreground); font-size:0.8rem"><%= (currentPage-1)*10+idx+1 %></td>
-                    <td style="font-size:0.85rem"><%= String(tx.transaction_date).substring(0,10) %></td>
+                    <td style="font-size:0.85rem"><%= formatDateOnlyIndo(tx.transaction_date) %></td>
                     <td>
                       <% if (tx.type === 'IN') { %>
                         <span class="tx-badge tx-in">▲ IN</span>

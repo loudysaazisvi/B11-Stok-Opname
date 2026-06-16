@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="/assets/styles.css"/>
   <style>
     .data-table { width:100%; border-collapse:collapse; font-size:0.875rem; }
-    .data-table thead th { padding:0.75rem 1rem; font-weight:600; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted-foreground); background:var(--muted); border-bottom:1px solid var(--border); text-align:left; white-space:nowrap; }
+    .data-table thead th { padding:0.75rem 1rem; font-weight:700; font-size:1.05rem; color:var(--foreground); background:var(--muted); border-bottom:1px solid var(--border); text-align:left; white-space:nowrap; }
     .data-table tbody td { padding:0.875rem 1rem; border-bottom:1px solid var(--border); vertical-align:middle; }
     .data-table tbody tr:last-child td { border-bottom:none; }
     .data-table tbody tr { transition:background-color 0.15s; }
@@ -122,14 +122,13 @@
                   <th>Kode</th>
                   <th>Nama Barang</th>
                   <th style="text-align:center">Selisih</th>
-                  <th>Referensi</th>
                   <th>Keterangan</th>
                 </tr>
               </thead>
               <tbody>
                 <% if (data.length === 0) { %>
                   <tr>
-                    <td colspan="7" style="padding:3rem 1rem; text-align:center; color:var(--muted-foreground)">
+                    <td colspan="6" style="padding:3rem 1rem; text-align:center; color:var(--muted-foreground)">
                       Tidak ada data opname pada periode ini
                     </td>
                   </tr>
@@ -137,13 +136,12 @@
                   <% data.forEach((row, idx) => { %>
                     <tr>
                       <td style="color:var(--muted-foreground); font-size:0.8rem"><%= (currentPage-1)*15+idx+1 %></td>
-                      <td style="font-size:0.85rem"><%= String(row.transaction_date).substring(0,10) %></td>
+                      <td style="font-size:0.85rem"><%= formatDateOnlyIndo(row.transaction_date) %></td>
                       <td><span class="code-chip"><%= row.item_code %></span></td>
                       <td style="font-weight:500"><%= row.item_name %></td>
                       <td style="text-align:center" class="<%= row.quantity > 0 ? 'qty-positive' : row.quantity < 0 ? 'qty-negative' : '' %>">
                         <%= row.quantity > 0 ? '+' : '' %><%= row.quantity %> <span style="font-weight:400; font-size:0.78rem; color:var(--muted-foreground)"><%= row.unit %></span>
                       </td>
-                      <td style="font-family:monospace; font-size:0.78rem; color:var(--muted-foreground)"><%= row.reference || '—' %></td>
                       <td style="font-size:0.85rem"><%= row.notes %></td>
                     </tr>
                   <% }) %>

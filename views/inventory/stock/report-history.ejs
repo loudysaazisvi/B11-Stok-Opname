@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="/assets/styles.css"/>
   <style>
     .data-table { width:100%; border-collapse:collapse; font-size:0.875rem; }
-    .data-table thead th { padding:0.75rem 1rem; font-weight:600; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted-foreground); background:var(--muted); border-bottom:1px solid var(--border); text-align:left; white-space:nowrap; }
+    .data-table thead th { padding:0.75rem 1rem; font-weight:700; font-size:1.05rem; color:var(--foreground); background:var(--muted); border-bottom:1px solid var(--border); text-align:left; white-space:nowrap; }
     .data-table tbody td { padding:0.875rem 1rem; border-bottom:1px solid var(--border); vertical-align:middle; }
     .data-table tbody tr:last-child td { border-bottom:none; }
     .data-table tbody tr { transition:background-color 0.15s; }
@@ -89,7 +89,7 @@
                   <tr>
                     <td style="color:var(--muted-foreground); font-size:0.8rem"><%= (currentPage-1)*10+idx+1 %></td>
                     <td>
-                      <span style="font-size:0.85rem; font-weight:500"><%= String(log.created_at).substring(0,19).replace('T',' ') %></span>
+                      <span style="font-size:0.85rem; font-weight:500"><%= formatDateIndo(log.created_at) %></span>
                     </td>
                     <td>
                       <% if (log.reference) { %>
