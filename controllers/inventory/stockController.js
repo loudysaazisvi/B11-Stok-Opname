@@ -43,4 +43,52 @@ const index = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { index };
+// Fitur 2 - riwayat stok per barang
+const history = async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 10;
+    const offset = (page - 1) * limit;
+    const filterType = req.query.type || '';
+    const filterStart = req.query.start || '';
+    const filterEnd = req.query.end || '';
+
+    const [itemRows] = await db.query('SELECT * FROM items WHERE id = ?', [req.params.id]);
+    if (itemRows.length === 0) return res.redirect('/inventory/stock?error=Barang tidak ditemukan');
+
+    let where = 'item_id = ?';
+    let params = [req.params.id];
+    if (filterType) { where += ' AND type = ?'; params.push(filterType); }
+    if (filterStart) { where += ' AND transaction_date >= ?'; params.push(filterStart); }
+    if (filterEnd) { where += ' AND transaction_date <= ?'; params.push(filterEnd); }
+
+    const [[{ total }]] = await db.query(
+      `SELECT COUNT(*) as total FROM inventory_transactions WHERE ${where}`, params
+    );
+    const [transactions] = await db.query(
+      `SELECT * FROM inventory_transactions WHERE ${where}
+       ORDER BY transaction_date DESC, created_at DESC LIMIT ? OFFSET ?`,
+      [...params, limit, offset]
+    );
+
+    const [[stockRow]] = await db.query(
+      'SELECT COALESCE(quantity, 0) as stock FROM inventories WHERE item_id = ?', [req.params.id]
+    );
+
+    res.render('inventory/stock/history', {
+      title: 'Riwayat Stok',
+      user: req.session.username,
+      item: itemRows[0],
+      currentStock: stockRow ? stockRow.stock : 0,
+      transactions,
+      filterType,
+      filterStart,
+      filterEnd,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+      totalData: total
+    });
+  } catch (err) { next(err); }
+};
+
+module.exports = { index, history };

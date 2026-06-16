@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <script>(() => { try { const s = localStorage.getItem("themeMode"); if (s ? s === "dark" : matchMedia("(prefers-color-scheme: dark)").matches) document.documentElement.classList.add("dark"); } catch(_){} })();</script>
+  <meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Riwayat Stok - Facultyware</title>
+  <link rel="stylesheet" href="/assets/styles.css"/>
+</head>
+<body>
+  <%- include('../sidebar', { activePage: 'stock', user: user }) %>
+
+  <main id="content">
+    <header class="bg-background sticky inset-x-0 top-0 isolate flex shrink-0 items-center gap-2 border-b z-10">
+      <div class="flex h-14 w-full items-center gap-2 px-4">
+        <button type="button" onclick="document.dispatchEvent(new CustomEvent('basecoat:sidebar'))" class="btn-sm-icon-ghost mr-2 size-7 -ml-1.5">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg>
+        </button>
+        <a href="/inventory/stock" class="text-sm text-muted-foreground hover:underline">Laporan Stok</a>
+        <span class="text-muted-foreground">/</span>
+        <span class="text-sm font-medium">Riwayat: <%= item.name %></span>
+        <div class="ml-auto">
+          <a href="/inventory/stock/<%= item.id %>/adjustment" class="btn-sm">+ Opname Baru</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="p-6 space-y-4">
+      <!-- Info Barang -->
+      <div class="card">
+        <section class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div><span class="text-muted-foreground block">Kode</span><span class="font-mono font-medium"><%= item.code %></span></div>
+          <div><span class="text-muted-foreground block">Nama</span><span class="font-medium"><%= item.name %></span></div>
+          <div><span class="text-muted-foreground block">Satuan</span><span><%= item.unit %></span></div>
+          <div><span class="text-muted-foreground block">Stok Saat Ini</span>
+            <span class="text-lg font-bold <%= currentStock < item.minimal_quantity ? 'text-red-600' : 'text-green-700' %>">
+              <%= currentStock %>
+            </span>
+          </div>
+        </section>
+      </div>
+
+      <!-- Filter -->
+      <div class="card">
+        <section>
+          <form method="GET" class="flex gap-3 flex-wrap items-end">
+            <div class="grid gap-1">
+              <label class="text-sm font-medium">Jenis Transaksi</label>
+              <select name="type" class="input">
+                <option value="" <%= filterType===''?'selected':'' %>>Semua</option>
+                <option value="IN" <%= filterType==='IN'?'selected':'' %>>Masuk (IN)</option>
+                <option value="OUT" <%= filterType==='OUT'?'selected':'' %>>Keluar (OUT)</option>
+                <option value="ADJUSTMENT" <%= filterType==='ADJUSTMENT'?'selected':'' %>>Opname</option>
+              </select>
+            </div>
+            <div class="grid gap-1">
+              <label class="text-sm font-medium">Dari Tanggal</label>
+              <input type="date" name="start" value="<%= filterStart %>" class="input"/>
+            </div>
+            <div class="grid gap-1">
+              <label class="text-sm font-medium">Sampai Tanggal</label>
+              <input type="date" name="end" value="<%= filterEnd %>" class="input"/>
+            </div>
+            <button type="submit" class="btn-sm">Filter</button>
+            <a href="/inventory/stock/<%= item.id %>/history" class="btn-sm-outline">Reset</a>
+          </form>
+        </section>
+      </div>
+
+      <!-- Tabel Riwayat -->
+      <div class="card">
+        <section class="p-0">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="border-b">
+                <tr class="text-left">
+                  <th class="px-4 py-3 font-medium">No</th>
+                  <th class="px-4 py-3 font-medium">Tanggal</th>
+                  <th class="px-4 py-3 font-medium">Jenis</th>
+                  <th class="px-4 py-3 font-medium">Selisih</th>
+                  <th class="px-4 py-3 font-medium">Referensi</th>
+                  <th class="px-4 py-3 font-medium">Keterangan</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (transactions.length === 0) { %>
+                  <tr><td colspan="6" class="px-4 py-8 text-center text-muted-foreground">Belum ada riwayat transaksi</td></tr>
+                <% } else { %>
+                  <% transactions.forEach((tx, idx) => { %>
+                    <tr class="border-b hover:bg-muted/50">
+                      <td class="px-4 py-3"><%= (currentPage-1)*10+idx+1 %></td>
+                      <td class="px-4 py-3"><%= String(tx.transaction_date).substring(0,10) %></td>
+                      <td class="px-4 py-3">
+                        <span class="text-xs px-2 py-0.5 rounded
+                          <%= tx.type==='IN' ? 'bg-green-100 text-green-700' : tx.type==='OUT' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700' %>">
+                          <%= tx.type %>
+                        </span>
+                      </td>
+                      <td class="px-4 py-3 font-semibold <%= tx.quantity > 0 ? 'text-green-700' : 'text-red-600' %>">
+                        <%= tx.quantity > 0 ? '+' : '' %><%= tx.quantity %> <%= item.unit %>
+                      </td>
+                      <td class="px-4 py-3 text-muted-foreground"><%= tx.reference || '-' %></td>
+                      <td class="px-4 py-3"><%= tx.notes || '-' %></td>
+                    </tr>
+                  <% }) %>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </section>
+        <% if (totalPages > 1) { %>
+        <footer class="flex items-center justify-between px-4 py-3 border-t">
+          <span class="text-sm text-muted-foreground">Total: <%= totalData %> transaksi</span>
+          <div class="flex gap-1">
+            <% for (let i = 1; i <= totalPages; i++) { %>
+              <a href="/inventory/stock/<%= item.id %>/history?page=<%= i %>&type=<%= filterType %>&start=<%= filterStart %>&end=<%= filterEnd %>"
+                 class="btn-sm-<%= i===currentPage?'':'outline' %>"><%= i %></a>
+            <% } %>
+          </div>
+        </footer>
+        <% } %>
+      </div>
+    </div>
+  </main>
+  <div id="toaster" class="toaster"></div>
+  <script src="/assets/js/sidebar.js"></script>
+</body>
+</html> 
