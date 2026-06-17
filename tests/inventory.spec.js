@@ -36,9 +36,9 @@ test.describe('Facultyware E2E Tests - Modul Inventori', () => {
     await page.fill('#password', 'password');
     await page.click('button[type="submit"]');
 
-    // Verifikasi redirect ke halaman Laporan Stok
-    await expect(page).toHaveURL(/\/inventory\/stock/);
-    await expect(page.locator('main header')).toContainText('Laporan Stok Barang');
+    // Verifikasi redirect ke halaman Master Data Barang
+    await expect(page).toHaveURL(/\/inventory\/items/);
+    await expect(page.locator('main header')).toContainText('Master Data Barang');
   });
 
   // Skenario 2: Master Data Barang (Dinda)
@@ -48,10 +48,7 @@ test.describe('Facultyware E2E Tests - Modul Inventori', () => {
     await page.fill('#username', 'admin');
     await page.fill('#password', 'password');
     await page.click('button[type="submit"]');
-    await expect(page).toHaveURL(/\/inventory\/stock/);
-    
-    // Navigasi ke halaman Master Data Barang
-    await page.goto('/inventory/items');
+    await expect(page).toHaveURL(/\/inventory\/items/);
 
     // Klik tombol Tambah Barang Baru
     // Tombol di layout diposisikan sebagai link dengan icon tambah

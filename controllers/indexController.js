@@ -3,7 +3,7 @@ const db = require("../lib/db");
 
 const index = (req, res) => {
   if (req.session.userId) {
-    return res.redirect("/inventory/stock");
+    return res.redirect("/inventory/items");
   }
   res.redirect("/login");
 };
@@ -13,7 +13,7 @@ const home = (req, res) => {
 };
 
 const loginPage = (req, res) => {
-  if (req.session.userId) return res.redirect("/inventory/stock");
+  if (req.session.userId) return res.redirect("/inventory/items");
   res.render("login", { title: "Login", error: null });
 };
 
@@ -45,7 +45,7 @@ const login = async (req, res, next) => {
 
     req.session.save((err) => {
       if (err) return next(err);
-      res.redirect("/inventory/stock");
+      res.redirect("/inventory/items");
     });
   } catch (err) {
     next(err);
