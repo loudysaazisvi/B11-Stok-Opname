@@ -115,7 +115,9 @@ const history = async (req, res, next) => {
       currentPage: page,
       totalPages: Math.ceil(total / limit),
       totalData: total,
-      formatDateOnlyIndo
+      formatDateOnlyIndo,
+      success: req.query.success || null,
+      error: req.query.error || null
     });
   } catch (err) { next(err); }
 };
