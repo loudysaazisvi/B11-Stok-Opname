@@ -5,13 +5,26 @@ Sistem informasi logistik berbasis web modern yang dirancang untuk mengelola dat
 * Nama: Loudysa Azisvi Angelia (NIM: 2411523024)
 * Nama: Dinda Nathasya Putri (NIM: 2411523032)
 
-🚀 Fitur Utama
-* **Daftar Stok Terkini**: Dashboard monitoring persediaan barang secara real-time.
-* **Melakukan Stok Opname**: Penyesuaian kuantitas stok fisik dengan stok tercatat secara berkala dari sistem (Form Adjustment).
-* **Memeriksa Riwayat Transaksi Barang**: Log rekam aktivitas alur keluar masuk barang dan catatan penyesuaian stok opname secara terperinci.
-* **Membuat Laporan Periodik**: Menghasilkan rekapitulasi data mutasi stok dengan filter rentang tanggal tertentu.
-* **Ekspor Dokumen ke PDF dan Excel**: Mengunduh rekapitulasi laporan logistik dalam format dokumen resmi PDF dan spreadsheet Excel.
-* **Memeriksa Riwayat Dokumen**: Catatan digital log riwayat cetakan laporan yang pernah dibuat di dalam sistem.
+🚀 Fitur Utama (Kelompok B11)
+
+### 📦 Modul Master Data Barang (Dinda — NIM: 2411523032)
+1. **Daftar & Filter Master Barang**: Menampilkan list seluruh data barang aktif lengkap dengan fitur pencarian, paginasi, dan filter status/kondisi barang.
+2. **Tambah Barang Baru**: Mendaftarkan barang baru ke database dengan validasi data di sisi server (server-side validation) dan penomoran kode barang otomatis (`BRG-XXX`).
+3. **Edit Data Barang**: Memperbarui informasi detail barang seperti nama, satuan, batas stok minimal, dan keterangan.
+4. **Nonaktifkan Barang (Soft Delete)**: Menonaktifkan barang tanpa menghapusnya secara permanen dari database (mengubah nilai stok minimal menjadi `-1`), guna menjaga integritas riwayat transaksi.
+5. **Aktifkan Kembali Barang**: Mengaktifkan kembali barang yang berstatus nonaktif agar muncul kembali di daftar utama melalui filter status.
+6. **Ekspor & Impor Massal via Excel [BONUS/WAJIB]**: Mengunduh data master barang ke format Excel (.xlsx) serta melakukan impor data barang baru secara massal melalui file Excel dengan sistem pencocokan header kolom secara dinamis dan pintar.
+7. **Pembangkit Kode QR (QR Code Generator) [BONUS/WAJIB]**: Menghasilkan gambar QR Code unik berisi metadata barang yang dapat diunduh untuk kebutuhan inventarisasi fisik.
+8. **REST API Endpoint Barang [WAJIB]**: Menyediakan endpoint REST API (`/inventory/api/items`) yang mengembalikan data barang dalam format JSON.
+
+### 📋 Modul Stok Opname & Pelaporan (Loudysa — NIM: 2411523024)
+1. **Daftar Stok Terkini**: Dashboard real-time untuk memantau jumlah stok barang di gudang beserta batas stok kritis (stok di bawah minimal).
+2. **Update Fisik Stok (Stok Opname / Adjustment)**: Menginputkan jumlah fisik barang hasil perhitungan nyata di gudang beserta alasan perubahannya. Sistem secara otomatis menghitung nilai selisih (positif/negatif) untuk memperbarui stok tercatat.
+3. **Riwayat Transaksi Stok (Audit Trail)**: Catatan kronologis log mutasi barang (+/-) dan alasan penyesuaian yang tidak dapat dihapus demi keamanan audit logistik.
+4. **Laporan Periodik Laporan**: Membuat rekapitulasi data penyesuaian stok opname berdasarkan rentang tanggal periode tertentu yang dipilih oleh admin.
+5. **Unduh Laporan PDF & Excel [BONUS/WAJIB]**: Mengekspor laporan hasil stok opname ke file PDF berlogo resmi Universitas Andalas (menggunakan PDFKit) dan file spreadsheet Excel (menggunakan ExcelJS).
+6. **Riwayat Dokumen Laporan**: Log histori dokumen laporan apa saja yang pernah dihasilkan/dicetak oleh admin untuk kebutuhan administrasi fisik.
+7. **REST API Endpoint Stok [WAJIB]**: Menyediakan endpoint REST API (`/inventory/api/stock` dan `/inventory/api/stock/:id/transactions`) yang mengembalikan data transaksi stok dalam format JSON.
 
 🛠️ Tech Stack (Teknologi yang Digunakan)
 ### Backend (Server-Side)
